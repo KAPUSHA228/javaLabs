@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+
+<VBox alignment="CENTER" prefHeight="600.0" prefWidth="1000.0" spacing="20.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.lab1new.HelloController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+   <Pane prefHeight="81.0" prefWidth="191.0">
+      <children>
+          <Label text="Счет игрока:" />
+          <Label fx:id="hits" layoutX="28.0" layoutY="34.0" text="0" />
+          <Label layoutX="100.0" text="Выстрелов:" />
+          <Label fx:id="shoots" layoutX="127.0" layoutY="34.0" text="0" />
+      </children>
+   </Pane>
+
+    <Pane fx:id="parentWindow" prefHeight="300.0" prefWidth="1000.0">
+        <children>
+            <Pane fx:id="pane" prefHeight="300.0" prefWidth="62.0" style="-fx-background-color: yellow;">
+              <children>
+                  <Polygon fx:id="shooting" fill="DODGERBLUE" onMouseClicked="#handlePolygonClick" points="0, 0, 0, 20, 20, 10" stroke="BLACK" strokeType="INSIDE" />
+              </children>
+            </Pane>
+            <Circle fx:id="circle2" centerX="380.0" centerY="61.0" fill="blue" radius="50.0" stroke="BLACK" strokeType="INSIDE" />
+            <Circle fx:id="circle1" centerX="677.0" centerY="36.0" fill="red" radius="25.0" stroke="BLACK" strokeType="INSIDE" />
+         <Line endY="-134.0" layoutX="379.0" layoutY="134.0" startY="166.00003051757812" />
+         <Line endX="-1.0" endY="-111.00000762939453" layoutX="677.0" layoutY="111.0" startX="-1.0" startY="206.80001831054688" />
+        </children>
+    </Pane>
+    <Pane prefHeight="80.0" prefWidth="604.0"><children>
+        <Button layoutY="14.0" mnemonicParsing="false" onAction="#toStartGame" text="Начать игру" />
+        <Button layoutX="118.0" layoutY="14.0" mnemonicParsing="false" onAction="#toEndGame" text="Закончить игру" />
+        <Button layoutX="250.0" layoutY="14.0" mnemonicParsing="false" onAction="#togglePause" text="Pause" />
+    </children></Pane>
+
+</VBox>
