@@ -12,13 +12,15 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class HelloController {
+    private boolean isFollowing;
+    private boolean isRunning1;
+    private boolean isRunning2;
+    private boolean isPaused;
+    private int shoot;
+    private int score;
+    private byte direction1;
+    private byte direction2;
 
-    private boolean isFollowing = false;
-    private boolean isRunning1 = false;
-    private boolean isRunning2 = false;
-    private boolean isPaused = false;
-    private int shoot = 0;
-    private int score = 0;
     @FXML
     private Pane parentWindow;
     @FXML
@@ -33,27 +35,36 @@ public class HelloController {
     private Circle circle1;
     @FXML
     private Circle circle2;
-
+    public HelloController()  {
+        isFollowing=false;
+        isRunning1=false;
+        isRunning2=false;
+        isPaused=false;
+        score=0;
+        shoot=0;
+        direction1=1;
+        direction2=1;
+    }
     @FXML
     protected void toStartGame() {
         isFollowing = true;
         isPaused = false;
         pane.setOnMouseMoved(this::handleMouseMove);
-        new Thread(this::moveCircle1).start();
-        new Thread(this::moveCircle2).start();
+        new Thread(()->moveCircle1((byte) 1)).start();
+        new Thread(()->moveCircle2((byte) 1)).start();
 
     }
-    private void moveCircle1() {
-        byte direction = 1;
-        int speed = 5;
+    private void moveCircle1(byte direction) {
+        byte speed = 5;
+        direction1=direction;
         if(!isRunning1){
             isRunning1=true;
 
             while (isFollowing&&!isPaused) {
-                double newY = circle1.getCenterY() + speed * direction;
+                double newY = circle1.getCenterY() + speed * direction1;
 
                 if (newY <= 0 || newY >= parentWindow.getHeight() - 30) {
-                    direction *=-1;
+                    direction1 *=-1;
                 }
 
                 Platform.runLater(()->circle1.setCenterY(newY));
@@ -66,17 +77,17 @@ public class HelloController {
         }
 
     }
-    private void moveCircle2() {
-        byte direction = 1;
-        int speed = 2;
+    private void moveCircle2(byte direction) {
+        byte speed = 2;
+        direction2=direction;
         if(!isRunning2){
             isRunning2=true;
 
             while (isFollowing&&!isPaused) {
-                double newY = circle2.getCenterY() + speed * direction;
+                double newY = circle2.getCenterY() + speed * direction2;
 
                 if (newY <= 0 || newY >= parentWindow.getHeight() - 50) {
-                    direction *=-1;
+                    direction2 *=-1;
                 }
 
                 Platform.runLater(()->circle2.setCenterY(newY));
@@ -216,8 +227,8 @@ public class HelloController {
             pane.setOnMouseMoved(this::handleMouseMove);
 
             if (isFollowing) {
-                new Thread(this::moveCircle1).start();
-                new Thread(this::moveCircle2).start();
+                new Thread(()->moveCircle1(direction1)).start();
+                new Thread(()->moveCircle2(direction2)).start();
             }
         }
     }
@@ -238,7 +249,7 @@ public class HelloController {
         hits.setText(String.valueOf(score));
         isRunning1=false;
         isRunning2=false;
-        circle1.setCenterY(0);
-        circle2.setCenterY(0);
+        circle1.setCenterY(150);
+        circle2.setCenterY(150);
     }
 }
