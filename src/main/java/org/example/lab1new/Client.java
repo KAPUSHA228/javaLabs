@@ -7,4 +7,7 @@ public class Client {
     private Socket socket;
     private ObjectOutputStream output;
     private ObjectInputStream input;
+    Client(){
+
+    }
 }

@@ -239,6 +239,10 @@ public class HelloController {
         return distance <= r1 + r2;
     }
     @FXML
+    protected void toAddPlayer(){
+
+    }
+    @FXML
     protected void toEndGame() {
         isFollowing=false;
         isPaused = false;
