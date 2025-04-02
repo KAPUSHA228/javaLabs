@@ -8,10 +8,20 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class HelloController {
+public class HelloController implements IObserver {
+    Model m = BModel.build();
+    ClientConnect cc;
+    private static final int port = 3124;
+    private Socket cs;
+    InetAddress ip=null;
     private boolean isFollowing;
     private boolean isRunning1;
     private boolean isRunning2;
@@ -35,6 +45,11 @@ public class HelloController {
     private Circle circle1;
     @FXML
     private Circle circle2;
+    @Override
+    public void event() {
+
+        //toStartGame();
+    }
     public HelloController()  {
         isFollowing=false;
         isRunning1=false;
@@ -44,6 +59,19 @@ public class HelloController {
         shoot=0;
         direction1=1;
         direction2=1;
+
+    }
+    @FXML
+    public void connect(){
+        try {
+             ip=InetAddress.getLocalHost();
+            cs=new Socket(ip,port);
+            cc = new ClientConnect(cs,false);
+        }
+        catch(IOException e){
+            System.out.println("Error2");
+        }
+
     }
     @FXML
     protected void toStartGame() {
@@ -191,6 +219,7 @@ public class HelloController {
                         score+=2;
                         hits.setText(String.valueOf(score));
                     });
+
                 } else {
                     if (checkCollision(newX, newY, bulletRadius, goalX2, goalY2, r2)) {
                         isBulletMoving.set(false);
@@ -239,10 +268,6 @@ public class HelloController {
         return distance <= r1 + r2;
     }
     @FXML
-    protected void toAddPlayer(){
-
-    }
-    @FXML
     protected void toEndGame() {
         isFollowing=false;
         isPaused = false;
@@ -256,4 +281,10 @@ public class HelloController {
         circle1.setCenterY(150);
         circle2.setCenterY(150);
     }
+    @FXML
+    public void initialize(){
+        m.addServers(this);
+    }
+
+
 }
