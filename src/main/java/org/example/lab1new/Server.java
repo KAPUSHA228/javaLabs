@@ -9,6 +9,7 @@ public class Server {
     private static final int port = 3124;
     private ServerSocket ss;
     private Socket cs;
+    private int score;
     InetAddress ip = null;
     Model m = BModel.build();
     ArrayList<ClientConnect> list = new ArrayList<>();
@@ -25,6 +26,11 @@ public class Server {
                 System.out.println("Connect to " + port);
                 ClientConnect cc = new ClientConnect(cs, true);
                 list.add(cc);
+                m.addServers(()->{
+                     list.forEach(clientConnect->{
+                         clientConnect.sendInfo(m.getAllInfo());
+                     });
+                });
             }
         } catch (IOException e) {
             System.out.println("Error1");

@@ -12,6 +12,7 @@ import javafx.scene.shape.Polygon;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -47,7 +48,8 @@ public class HelloController implements IObserver {
 
     @Override
     public void event() {
-
+        //ArrayList<Integer>scores =m.getScores();
+        //ArrayList<Integer>shots =m.getShots();
         //toStartGame();
     }
 
@@ -69,6 +71,8 @@ public class HelloController implements IObserver {
             ip = InetAddress.getLocalHost();
             cs = new Socket(ip, port);
             cc = new ClientConnect(cs, false);
+            ActionMsg msg = new ActionMsg(ActionType.READY);
+            cc.sendAction(msg);
         } catch (IOException e) {
             System.out.println("Error2");
         }

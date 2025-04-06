@@ -4,14 +4,38 @@ package org.example.lab1new;
 import java.util.ArrayList;
 
 public class Model {
-    ArrayList<IObserver> allSevers = new ArrayList<>();
+    ArrayList<IObserver> allServers = new ArrayList<>();
+    GameInfo info = new GameInfo();
 
     public void event() {
-        allSevers.forEach(IObserver::event);
+        allServers.forEach(IObserver::event);
     }
 
     public void addServers(IObserver c) {
-        allSevers.add(c);
+        allServers.add(c);
+        ArrayList<Integer> tmp;
+        tmp = info.getScores();
+        tmp.add(0);
+        info.setAllScore(tmp);
+        tmp = info.getShots();
+        tmp.add(0);
+        info.setAllShot(tmp);
         event();
     }
+
+    GameInfo getAllInfo() {
+        return info;
+    }
+    void setInfo(GameInfo in){
+        this.info=in;
+    }
+    void setScores(ArrayList<Integer> sc) {
+        this.info.setAllScore(sc);
+    }
+
+    void setShots(ArrayList<Integer> sh) {
+        this.info.setAllShot(sh);
+    }
+
+
 }

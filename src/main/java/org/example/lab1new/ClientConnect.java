@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class ClientConnect {
     Model m = BModel.build();
@@ -34,13 +35,17 @@ public class ClientConnect {
             dis = new DataInputStream(is);
             while (true) {
                 if (isServer) {
+                    System.out.println("eblo");
                     ActionMsg msg = getAction();
-                    if (msg.getType() == ActionType.SET) {
-                        System.out.println("POPADOS");
+                    if (msg.getType() == ActionType.READY) {
+                        System.out.println("POIMAL");
                     }
+//                    if (msg.getType() == ActionType.UPDATESCORE) {
+//                    }
                 } else {
-                    System.out.println("POPADOS2");
-                    //break;
+                    System.out.println("eblo2");
+                    GameInfo msg = getInfo();
+                    m.setInfo(msg);
                 }
             }
         } catch (IOException e) {
@@ -52,6 +57,7 @@ public class ClientConnect {
     void sendAction(ActionMsg msg) {
         try {
             String s = json.toJson(msg);
+            System.out.println("HI");
             dos.writeUTF(s);
             dos.flush();
         } catch (IOException e) {
@@ -63,6 +69,25 @@ public class ClientConnect {
         try {
             String s = dis.readUTF();
             return json.fromJson(s, ActionMsg.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    void sendInfo(GameInfo msg) {
+        try {
+            String s = json.toJson(msg);
+            System.out.println("HI");
+            dos.writeUTF(s);
+            dos.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    GameInfo getInfo() {
+        try {
+            String s = dis.readUTF();
+            return json.fromJson(s, GameInfo.class);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
