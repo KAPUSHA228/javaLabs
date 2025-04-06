@@ -1,6 +1,5 @@
 package org.example.lab1new;
 
-
 import java.util.ArrayList;
 
 public class Model {
@@ -13,22 +12,18 @@ public class Model {
 
     public void addServers(IObserver c) {
         allServers.add(c);
-        ArrayList<Integer> tmp;
-        tmp = info.getScores();
-        tmp.add(0);
-        info.setAllScore(tmp);
-        tmp = info.getShots();
-        tmp.add(0);
-        info.setAllShot(tmp);
+        info.addNewOBS();
         event();
     }
 
     GameInfo getAllInfo() {
         return info;
     }
-    void setInfo(GameInfo in){
-        this.info=in;
+
+    void setInfo(GameInfo in) {
+        this.info = in;
     }
+
     void setScores(ArrayList<Integer> sc) {
         this.info.setAllScore(sc);
     }

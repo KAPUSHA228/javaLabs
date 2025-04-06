@@ -12,7 +12,6 @@ import javafx.scene.shape.Polygon;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -26,8 +25,6 @@ public class HelloController implements IObserver {
     private boolean isRunning1;
     private boolean isRunning2;
     private boolean isPaused;
-    private int shoot;
-    private int score;
     private byte direction1;
     private byte direction2;
 
@@ -58,13 +55,14 @@ public class HelloController implements IObserver {
         isRunning1 = false;
         isRunning2 = false;
         isPaused = false;
-        score = 0;
-        shoot = 0;
         direction1 = 1;
         direction2 = 1;
 
     }
-
+    @FXML
+    public void initialize() {
+        m.addServers(this);
+    }
     @FXML
     public void connect() {
         try {
@@ -180,8 +178,8 @@ public class HelloController implements IObserver {
     @FXML
     protected void handlePolygonClick() {
         if (isFollowing && !isPaused) {
-            shoot++;
-            shoots.setText(String.valueOf(shoot));
+            m.getAllInfo().IncrementShots(0);
+            shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
             Circle bullet = new Circle(5);
 
             double initialX = pane.getLayoutX() + shooting.getLayoutX() + 20;
@@ -230,8 +228,8 @@ public class HelloController implements IObserver {
                         parentWindow.getChildren().remove(bullet);
                         System.out.println("bullet remove 2");
                         System.out.println(newX + " " + newY + " " + bulletRadius + " " + goalX1 + " " + goalY1 + " " + r1);
-                        score += 2;
-                        hits.setText(String.valueOf(score));
+                        m.getAllInfo().IncreaseScoreI(0,2);
+                        hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
                     });
 
                 } else {
@@ -241,9 +239,8 @@ public class HelloController implements IObserver {
                             parentWindow.getChildren().remove(bullet);
                             System.out.println("bullet remove 3");
                             System.out.println(newX + " " + newY + " " + bulletRadius + " " + goalX2 + " " + goalY2 + " " + r2);
-
-                            score++;
-                            hits.setText(String.valueOf(score));
+                            m.getAllInfo().IncreaseScoreI(0,1);
+                            hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
                         });
                     } else {
                         Platform.runLater(() -> bullet.setCenterX(newX));
@@ -288,21 +285,15 @@ public class HelloController implements IObserver {
     protected void toEndGame() {
         isFollowing = false;
         isPaused = false;
-        pane.setOnMouseMoved(null);
-        shoot = 0;
-        score = 0;
-        shoots.setText(String.valueOf(shoot));
-        hits.setText(String.valueOf(score));
         isRunning1 = false;
         isRunning2 = false;
         circle1.setCenterY(150);
         circle2.setCenterY(150);
+        pane.setOnMouseMoved(null);
+        m.getAllInfo().ResetStatistic();
+        shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
+        System.out.println(m.getAllInfo().getScores());
+        hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
+        System.out.println(m.getAllInfo().getShots());
     }
-
-    @FXML
-    public void initialize() {
-        m.addServers(this);
-    }
-
-
 }
