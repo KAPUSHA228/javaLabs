@@ -40,8 +40,9 @@ public class ClientConnect {
                     if (msg.getType() == ActionType.READY) {
                         System.out.println("POIMAL");
                     }
-//                    if (msg.getType() == ActionType.UPDATESCORE) {
-//                    }
+                    if (msg.getType() == ActionType.UPDATESCORE) {
+                        System.out.println("score");
+                    }
                 } else {
                     System.out.println("eblo2");
                     GameInfo msg = getInfo();
@@ -73,10 +74,11 @@ public class ClientConnect {
             throw new RuntimeException(e);
         }
     }
+
     void sendInfo(GameInfo msg) {
         try {
             String s = json.toJson(msg);
-            System.out.println("HI");
+            System.out.println("HI2");
             dos.writeUTF(s);
             dos.flush();
         } catch (IOException e) {
