@@ -33,7 +33,7 @@
         <Button layoutY="14.0" mnemonicParsing="false" onAction="#toStartGame" text="Начать игру"/>
         <Button layoutX="118.0" layoutY="14.0" mnemonicParsing="false" onAction="#toEndGame" text="Закончить игру"/>
         <Button layoutX="250.0" layoutY="14.0" mnemonicParsing="false" onAction="#togglePause" text="Пауза"/>
-        <Button layoutX="347.0" layoutY="14.0" mnemonicParsing="false" onAction="#connect" text="Добавить игрока"/>
+        <Button layoutX="347.0" layoutY="14.0" mnemonicParsing="false" onAction="#connect" text="Подключиться к серверу"/>
     </Pane>
 
 </VBox>

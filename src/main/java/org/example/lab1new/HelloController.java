@@ -11,7 +11,6 @@ import javafx.scene.shape.Polygon;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -21,7 +20,7 @@ public class HelloController implements IObserver {
     ClientConnect cc;
     private static final int port = 3124;
     private Socket cs;
-    InetAddress ip=null;
+    InetAddress ip = null;
     private boolean isFollowing;
     private boolean isRunning1;
     private boolean isRunning2;
@@ -45,87 +44,96 @@ public class HelloController implements IObserver {
     private Circle circle1;
     @FXML
     private Circle circle2;
+
     @Override
     public void event() {
 
         //toStartGame();
     }
-    public HelloController()  {
-        isFollowing=false;
-        isRunning1=false;
-        isRunning2=false;
-        isPaused=false;
-        score=0;
-        shoot=0;
-        direction1=1;
-        direction2=1;
+
+    public HelloController() {
+        isFollowing = false;
+        isRunning1 = false;
+        isRunning2 = false;
+        isPaused = false;
+        score = 0;
+        shoot = 0;
+        direction1 = 1;
+        direction2 = 1;
 
     }
+
     @FXML
-    public void connect(){
+    public void connect() {
         try {
-             ip=InetAddress.getLocalHost();
-            cs=new Socket(ip,port);
-            cc = new ClientConnect(cs,false);
-        }
-        catch(IOException e){
+            ip = InetAddress.getLocalHost();
+            cs = new Socket(ip, port);
+            cc = new ClientConnect(cs, false);
+        } catch (IOException e) {
             System.out.println("Error2");
         }
 
     }
+
     @FXML
     protected void toStartGame() {
         isFollowing = true;
         isPaused = false;
         pane.setOnMouseMoved(this::handleMouseMove);
-        new Thread(()->moveCircle1((byte) 1)).start();
-        new Thread(()->moveCircle2((byte) 1)).start();
+        new Thread(() -> moveCircle1((byte) 1)).start();
+        new Thread(() -> moveCircle2((byte) 1)).start();
 
     }
+
     private void moveCircle1(byte direction) {
         byte speed = 5;
-        direction1=direction;
-        if(!isRunning1){
-            isRunning1=true;
+        direction1 = direction;
+        if (!isRunning1) {
+            isRunning1 = true;
 
-            while (isFollowing&&!isPaused) {
+            while (isFollowing && !isPaused) {
                 double newY = circle1.getCenterY() + speed * direction1;
 
                 if (newY <= 0 || newY >= parentWindow.getHeight() - 30) {
-                    direction1 *=-1;
+                    direction1 *= -1;
                 }
 
-                Platform.runLater(()->circle1.setCenterY(newY));
+                Platform.runLater(() -> circle1.setCenterY(newY));
                 try {
                     Thread.sleep(16); // ~60 FPS (1000ms / 60 = 16ms)
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            }isRunning1 = false;
+            }
+            isRunning1 = false;
         }
 
     }
+
     private void moveCircle2(byte direction) {
         byte speed = 2;
-        direction2=direction;
-        if(!isRunning2){
-            isRunning2=true;
+        direction2 = direction;
+        if (!isRunning2) {
+            isRunning2 = true;
 
-            while (isFollowing&&!isPaused) {
+            while (isFollowing && !isPaused) {
                 double newY = circle2.getCenterY() + speed * direction2;
 
                 if (newY <= 0 || newY >= parentWindow.getHeight() - 50) {
-                    direction2 *=-1;
+                    direction2 *= -1;
                 }
 
-                Platform.runLater(()->circle2.setCenterY(newY));
+                Platform.runLater(() -> circle2.setCenterY(newY));
                 try {
                     Thread.sleep(16); // ~60 FPS (1000ms / 60 = 16ms)
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            }isRunning2 = false;
-        }}
+            }
+            isRunning2 = false;
+        }
+    }
+
     private void handleMouseMove(MouseEvent event) {
         double mouseX = Math.max(0, Math.min(event.getX(), pane.getWidth()));
         double mouseY = Math.max(0, Math.min(event.getY(), pane.getHeight()));
@@ -164,15 +172,16 @@ public class HelloController implements IObserver {
         shooting.setLayoutX(newX);
         shooting.setLayoutY(newY);
     }
+
     @FXML
     protected void handlePolygonClick() {
-        if (isFollowing&&!isPaused) {
+        if (isFollowing && !isPaused) {
             shoot++;
             shoots.setText(String.valueOf(shoot));
             Circle bullet = new Circle(5);
 
-            double initialX = pane.getLayoutX() + shooting.getLayoutX()+20;
-            double initialY = shooting.getLayoutY()+10;
+            double initialX = pane.getLayoutX() + shooting.getLayoutX() + 20;
+            double initialY = shooting.getLayoutY() + 10;
 
             if (initialX < 0 || initialX > parentWindow.getWidth()) {
                 parentWindow.getChildren().remove(bullet);
@@ -186,12 +195,13 @@ public class HelloController implements IObserver {
             new Thread(() -> moveBullet(bullet)).start();
         }
     }
+
     private void moveBullet(Circle bullet) {
         int speed = 5;
         double bulletRadius = bullet.getRadius();
         AtomicBoolean isBulletMoving = new AtomicBoolean(true);
 
-        while (isBulletMoving.get()&&!isPaused) {
+        while (isBulletMoving.get() && !isPaused) {
             double newX = bullet.getCenterX() + speed;
             double newY = bullet.getCenterY();
 
@@ -215,8 +225,8 @@ public class HelloController implements IObserver {
                     Platform.runLater(() -> {
                         parentWindow.getChildren().remove(bullet);
                         System.out.println("bullet remove 2");
-                        System.out.println(newX+" "+newY+" "+bulletRadius+" "+goalX1+" "+goalY1+" " +r1);
-                        score+=2;
+                        System.out.println(newX + " " + newY + " " + bulletRadius + " " + goalX1 + " " + goalY1 + " " + r1);
+                        score += 2;
                         hits.setText(String.valueOf(score));
                     });
 
@@ -226,9 +236,9 @@ public class HelloController implements IObserver {
                         Platform.runLater(() -> {
                             parentWindow.getChildren().remove(bullet);
                             System.out.println("bullet remove 3");
-                            System.out.println(newX+" "+newY+" " +bulletRadius+" " + goalX2+" " + goalY2 +" " +r2);
+                            System.out.println(newX + " " + newY + " " + bulletRadius + " " + goalX2 + " " + goalY2 + " " + r2);
 
-                            score ++;
+                            score++;
                             hits.setText(String.valueOf(score));
                         });
                     } else {
@@ -244,6 +254,7 @@ public class HelloController implements IObserver {
             }
         }
     }
+
     @FXML
     protected void togglePause() {
         isPaused = !isPaused;
@@ -256,33 +267,36 @@ public class HelloController implements IObserver {
             pane.setOnMouseMoved(this::handleMouseMove);
 
             if (isFollowing) {
-                new Thread(()->moveCircle1(direction1)).start();
-                new Thread(()->moveCircle2(direction2)).start();
+                new Thread(() -> moveCircle1(direction1)).start();
+                new Thread(() -> moveCircle2(direction2)).start();
             }
         }
     }
+
     private boolean checkCollision(double x1, double y1, double r1, double x2, double y2, double r2) {
         double dx = x1 - x2;
         double dy = y1 - y2;
         double distance = Math.sqrt(dx * dx + dy * dy);
         return distance <= r1 + r2;
     }
+
     @FXML
     protected void toEndGame() {
-        isFollowing=false;
+        isFollowing = false;
         isPaused = false;
         pane.setOnMouseMoved(null);
-        shoot=0;
-        score=0;
+        shoot = 0;
+        score = 0;
         shoots.setText(String.valueOf(shoot));
         hits.setText(String.valueOf(score));
-        isRunning1=false;
-        isRunning2=false;
+        isRunning1 = false;
+        isRunning2 = false;
         circle1.setCenterY(150);
         circle2.setCenterY(150);
     }
+
     @FXML
-    public void initialize(){
+    public void initialize() {
         m.addServers(this);
     }
 
