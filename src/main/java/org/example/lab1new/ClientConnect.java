@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
 
 public class ClientConnect {
     Model m = BModel.build();
@@ -29,6 +28,10 @@ public class ClientConnect {
 
     }
 
+    Model getModel() {
+        return m;
+    }
+
     void run() {
         try {
             is = cs.getInputStream();
@@ -37,16 +40,28 @@ public class ClientConnect {
                 if (isServer) {
                     System.out.println("eblo");
                     ActionMsg msg = getAction();
-                    if (msg.getType() == ActionType.READY) {
-                        System.out.println("POIMAL");
+                    if (msg.getType() == ActionType.GET) {
+                        System.out.println("POIMAL1");
+                        GameInfo msg2 = m.getAllInfo();
+                        System.out.println("WAS1 " + m.getAllInfo().getScoreI(0));
+                        System.out.println("IS1 " + msg2.getScoreI(0));
+                        sendInfo(msg2);
                     }
-                    if (msg.getType() == ActionType.UPDATESCORE) {
+                    else if (msg.getType() == ActionType.UPDSC) {
                         System.out.println("score");
                     }
                 } else {
                     System.out.println("eblo2");
-                    GameInfo msg = getInfo();
-                    m.setInfo(msg);
+                    ActionMsg msg = getAction();
+                    if (msg.getType() == ActionType.GET) {
+                        System.out.println("POIMAL2");
+                        GameInfo newInfo = getInfo();
+                        GameInfo currentInfo = m.getAllInfo();
+                        currentInfo.setAllScore(newInfo.getScores()); // Обновляем scores
+                        currentInfo.setAllShot(newInfo.getShots());   // Обновляем shots
+                        System.out.println("WAS2 " + m.getAllInfo().getScoreI(0));
+
+                    }
                 }
             }
         } catch (IOException e) {

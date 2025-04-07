@@ -45,6 +45,10 @@ public class HelloController implements IObserver {
 
     @Override
     public void event() {
+        System.out.println("HelloController initialized. Scores: " + m.getAllInfo().getScores());
+        System.out.println(m.getAllInfo().getScoreI(0));
+        //shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
+        //hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
         //ArrayList<Integer>scores =m.getScores();
         //ArrayList<Integer>shots =m.getShots();
         //toStartGame();
@@ -69,8 +73,12 @@ public class HelloController implements IObserver {
             ip = InetAddress.getLocalHost();
             cs = new Socket(ip, port);
             cc = new ClientConnect(cs, false);
-            ActionMsg msg = new ActionMsg(ActionType.READY);
+            ActionMsg msg = new ActionMsg(ActionType.GET);
             cc.sendAction(msg);
+            m.setInfo(cc.getInfo());
+            System.out.println("IGET"+ m.getAllInfo().getScoreI(0));
+            shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
+            hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
         } catch (IOException e) {
             System.out.println("Error2");
         }
@@ -247,7 +255,7 @@ public class HelloController implements IObserver {
                     }
                 }
             }
-
+           // System.out.println("stupapupa"+m.getAllInfo().getScores());
             try {
                 Thread.sleep(16); // ~60 FPS (1000ms / 60 = 16ms)
             } catch (InterruptedException e) {

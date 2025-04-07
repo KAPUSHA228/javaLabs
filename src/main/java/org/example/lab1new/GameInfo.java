@@ -5,44 +5,52 @@ import java.util.ArrayList;
 public class GameInfo {
     private ArrayList<Integer> scores = new ArrayList<>();
     private ArrayList<Integer> shots = new ArrayList<>();
-
+    public void addChill(){
+        this.scores.add(8);
+        this.shots.add(8);
+    }
+    public void addChill(Integer k){
+        this.scores.add(k);
+        this.shots.add(k);
+    }
     public ArrayList<Integer> getShots() {
-        return shots;
+        return this.shots;
     }
 
     public ArrayList<Integer> getScores() {
-        return scores;
+        return this.scores;
     }
 
     public Integer getScoreI(int index) {
-        return scores.get(index);
+        return this.scores.get(index);
     }
 
     public Integer getShotI(int index) {
-        return shots.get(index);
+        return this.shots.get(index);
     }
 
-    public void addNewOBS(){
-        scores.add(0);
-        shots.add(0);
+    public void addNewOBS() {
+        System.out.println("Adding new OBS entry"); // Логирование
+        this.scores.add(0);
+        this.shots.add(0);
     }
     public void IncreaseScoreI(int index, int val) {
-        int tmp = scores.get(index) + val;
-        scores.set(index, tmp);
+        int tmp = this.scores.get(index) + val;
+        this.scores.set(index, tmp);
     }
 
     public void SetScoreI(int index, int val) {
-        scores.set(index, val);
+        this.scores.set(index, val);
     }
 
     public void ResetStatistic() {
-        scores.replaceAll(ignored -> 0);
-        shots.replaceAll(ignored -> 0);
+        this.scores.replaceAll(ignored -> 0);
+        this.shots.replaceAll(ignored -> 0);
     }
 
     public void IncrementShots(int index) {
-        int tmp = shots.get(index) + 1;
-        shots.set(index, tmp);
+        int tmp = this.shots.get(index) + 1;
+        this.shots.set(index, tmp);
     }
 
     public void setAllScore(ArrayList<Integer> scores) {
