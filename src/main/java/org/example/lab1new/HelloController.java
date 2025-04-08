@@ -2,6 +2,7 @@ package org.example.lab1new;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class HelloController implements IObserver {
+
     Model m = BModel.build();
     ClientConnect cc;
     private static final int port = 3124;
@@ -27,7 +29,8 @@ public class HelloController implements IObserver {
     private boolean isPaused;
     private byte direction1;
     private byte direction2;
-
+    @FXML
+    private Button connecting;
     @FXML
     private Pane parentWindow;
     @FXML
@@ -45,13 +48,10 @@ public class HelloController implements IObserver {
 
     @Override
     public void event() {
-        System.out.println("HelloController initialized. Scores: " + m.getAllInfo().getScores());
-        System.out.println(m.getAllInfo().getScoreI(0));
-        //shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
-        //hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
-        //ArrayList<Integer>scores =m.getScores();
-        //ArrayList<Integer>shots =m.getShots();
-        //toStartGame();
+        Platform.runLater(() -> {
+            shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
+            hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
+        });
     }
 
     public HelloController() {
@@ -70,11 +70,12 @@ public class HelloController implements IObserver {
     @FXML
     public void connect() {
         try {
+            connecting.setDisable(true);
+            connecting.setVisible(false);
             ip = InetAddress.getLocalHost();
             cs = new Socket(ip, port);
             cc = new ClientConnect(cs, false);
-            ActionMsg msg = new ActionMsg(ActionType.GET);
-            cc.sendAction(msg);
+            cc.sendAction(new ActionMsg(ActionType.UPDMODEL));
             m.setInfo(cc.getInfo());
             System.out.println("IGET"+ m.getAllInfo().getScoreI(0));
             shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
@@ -186,7 +187,7 @@ public class HelloController implements IObserver {
     @FXML
     protected void handlePolygonClick() {
         if (isFollowing && !isPaused) {
-            m.getAllInfo().IncrementShots(0);
+            cc.sendAction(new ActionMsg(ActionType.UPDSH));
             shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
             Circle bullet = new Circle(5);
 
@@ -236,8 +237,9 @@ public class HelloController implements IObserver {
                         parentWindow.getChildren().remove(bullet);
                         System.out.println("bullet remove 2");
                         System.out.println(newX + " " + newY + " " + bulletRadius + " " + goalX1 + " " + goalY1 + " " + r1);
-                        m.getAllInfo().IncreaseScoreI(0,2);
-                        hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
+                        //m.getAllInfo().IncreaseScoreI(0,2);
+                        cc.sendAction(new ActionMsg(ActionType.UPDSC2));
+                       // hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
                     });
 
                 } else {
@@ -247,8 +249,9 @@ public class HelloController implements IObserver {
                             parentWindow.getChildren().remove(bullet);
                             System.out.println("bullet remove 3");
                             System.out.println(newX + " " + newY + " " + bulletRadius + " " + goalX2 + " " + goalY2 + " " + r2);
-                            m.getAllInfo().IncreaseScoreI(0,1);
-                            hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
+                            //m.getAllInfo().IncreaseScoreI(0,1);
+                            cc.sendAction(new ActionMsg(ActionType.UPDSC1));
+                            //hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
                         });
                     } else {
                         Platform.runLater(() -> bullet.setCenterX(newX));

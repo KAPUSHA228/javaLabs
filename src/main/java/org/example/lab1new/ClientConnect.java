@@ -5,34 +5,51 @@ import com.google.gson.Gson;
 import java.io.*;
 import java.net.Socket;
 
-public class ClientConnect {
-    Model m = BModel.build();
+public class ClientConnect implements Runnable {
+    private final Model m;
     Socket cs;
     InputStream is;
     OutputStream os;
     DataInputStream dis;
     DataOutputStream dos;
+    private final Server server;
     boolean isServer = false;
     Gson json = new Gson();
+    private int clientIndex;
 
-    public ClientConnect(Socket cs, boolean isServer) {
+    public ClientConnect(Socket cs, boolean isServer, Model m, Server server, int id) {
         this.cs = cs;
         this.isServer = isServer;
+        this.m = m;
+        this.server = server;
+        this.clientIndex = id;
         try {
-            os = cs.getOutputStream();
+            OutputStream os = cs.getOutputStream();
             dos = new DataOutputStream(os);
-            new Thread(this::run).start();
+            InputStream is = cs.getInputStream();
+            dis = new DataInputStream(is);
+            new Thread(this::run).start(); // Запускаем поток для обработки сообщений
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    public ClientConnect(Socket cs, boolean isServer) {
+        this(cs, isServer, BModel.build(), null, 0);
+        this.clientIndex = getAction().getID();
+        System.out.println("MY CLIENT ID " + clientIndex);
     }
 
     Model getModel() {
         return m;
     }
 
-    void run() {
+    int getID() {
+        return clientIndex;
+    }
+
+    @Override
+    public void run() {
         try {
             is = cs.getInputStream();
             dis = new DataInputStream(is);
@@ -40,28 +57,43 @@ public class ClientConnect {
                 if (isServer) {
                     System.out.println("eblo");
                     ActionMsg msg = getAction();
-                    if (msg.getType() == ActionType.GET) {
-                        System.out.println("POIMAL1");
-                        GameInfo msg2 = m.getAllInfo();
-                        System.out.println("WAS1 " + m.getAllInfo().getScoreI(0));
-                        System.out.println("IS1 " + msg2.getScoreI(0));
-                        sendInfo(msg2);
-                    }
-                    else if (msg.getType() == ActionType.UPDSC) {
-                        System.out.println("score");
+                    switch (msg.getType()) {
+                        case UPDMODEL:
+                            System.out.println("Server: Received UPDMODEL");
+                            sendInfo(m.getAllInfo());
+                            break;
+                        case UPDSC2:
+                            System.out.println("Server: Received UPDSC2");
+                            m.getAllInfo().IncreaseScoreI(clientIndex, 2); // Обновляем общую модель
+                            server.broadcast(m.getAllInfo());// Уведомляем всех (рассылка через наблюдателя)
+                            break;
+                        case UPDSC1:
+                            System.out.println("Server: Received UPDSC1");
+                            m.getAllInfo().IncreaseScoreI(clientIndex, 1);
+                            server.broadcast(m.getAllInfo());// Уведомляем всех (рассылка через наблюдателя)
+                            break;
+                        case UPDSH:
+                            System.out.println("Server: Received UPDSH");
+                            m.getAllInfo().IncrementShots(clientIndex);
+                            server.broadcast(m.getAllInfo());// Уведомляем всех (рассылка через наблюдателя)
+                            break;
+                        case SETID:
+                            sendAction(new ActionMsg(ActionType.SETID, this.clientIndex));
+                            System.out.println("Server: Received SETID");
+                            break;
+                        default:
+                            System.out.println("Server: Unknown action");
                     }
                 } else {
                     System.out.println("eblo2");
-                    ActionMsg msg = getAction();
-                    if (msg.getType() == ActionType.GET) {
-                        System.out.println("POIMAL2");
-                        GameInfo newInfo = getInfo();
-                        GameInfo currentInfo = m.getAllInfo();
-                        currentInfo.setAllScore(newInfo.getScores()); // Обновляем scores
-                        currentInfo.setAllShot(newInfo.getShots());   // Обновляем shots
-                        System.out.println("WAS2 " + m.getAllInfo().getScoreI(0));
-
-                    }
+                    //ActionMsg msg = getAction();
+                    //if (msg.getType() == ActionType.UPDMODEL) {
+                    System.out.println("POIMAL8");
+                    GameInfo newInfo = getInfo();
+                    m.setInfo(newInfo);
+                    //System.out.println("WAS8 " + m.getAllInfo().getScoreI(0));
+                    m.event();
+                    //}
                 }
             }
         } catch (IOException e) {

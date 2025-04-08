@@ -5,9 +5,11 @@ import java.util.ArrayList;
 public class Model {
     ArrayList<IObserver> allServers = new ArrayList<>();
     GameInfo info = new GameInfo();
+
     public void event() {
         allServers.forEach(IObserver::event);
     }
+
     public void addChill(){
         this.info.addChill(8);
         event();

@@ -6,6 +6,11 @@ import java.util.*;
 
 
 public class Server {
+    static int clientIndex=0;
+    private double circle1Y = 150;
+    private double circle2Y = 150;
+    private byte direction1 = 1;
+    private byte direction2 = 1;
     private static final int port = 3124;
     private ServerSocket ss;
     private Socket cs;
@@ -15,34 +20,37 @@ public class Server {
     ArrayList<ClientConnect> list = new ArrayList<>();
     Server() {
         try {
-            System.out.println("Before addChill: " + m.getAllInfo().getScores());
-            m.addChill();
-            System.out.println("After addChill: " + m.getAllInfo().getScores());
             ip = InetAddress.getLocalHost();
             ss = new ServerSocket(port, 0, ip);
-            System.out.println("Server start\n");
+            System.out.println("Server started\n");
+
+            // Общий наблюдатель для всех клиентов
+            m.addServers(() -> {
+                GameInfo currentInfo = m.getAllInfo();
+                list.forEach(client -> client.sendInfo(currentInfo));
+            });
 
             while (true) {
-                cs = ss.accept();
-
+                Socket cs = ss.accept();
+                ClientConnect cc = new ClientConnect(cs, true, m, this, clientIndex);
+                System.out.println( "VIVOD ID CONTROL "+ clientIndex);
                 int port = cs.getPort();
-                System.out.println("Connect to " + port);
-                ClientConnect cc = new ClientConnect(cs, true);
+                System.out.println("SERVER's MODEL "+m.getAllInfo().getScores());
+                System.out.println("Connected to: " + port);
                 list.add(cc);
-                m.addServers(() -> {
-                    GameInfo info = m.getAllInfo();
-                    if (info.getScores().isEmpty()) {
-                        System.out.println("WARN: Scores list is empty!"); // Логирование
-                    }
-                    list.forEach(client -> client.sendInfo(info));
-                });
-
+                new Thread(cc).start();
+                cc.sendAction(new ActionMsg(ActionType.SETID, clientIndex));
+                clientIndex++;
+                System.out.println("MY SERVER ID "+ cc.getID());
+                cc.sendInfo(m.getAllInfo()); // Отправляем данные сразу после подключения
             }
         } catch (IOException e) {
-            System.out.println("Error1");
+            System.out.println("Server error: " + e.getMessage());
         }
     }
-
+    public void broadcast(GameInfo info) {
+        list.forEach(client -> client.sendInfo(info));
+    }
     public static void main(String[] args) {
         new Server();
     }

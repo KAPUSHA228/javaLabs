@@ -1,13 +1,14 @@
 package org.example.lab1new;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class GameInfo {
     private ArrayList<Integer> scores = new ArrayList<>();
     private ArrayList<Integer> shots = new ArrayList<>();
-    public void addChill(){
-        this.scores.add(8);
-        this.shots.add(8);
+    public void addClient(){
+        this.scores.add(0);
+        this.shots.add(0);
     }
     public void addChill(Integer k){
         this.scores.add(k);
@@ -44,8 +45,8 @@ public class GameInfo {
     }
 
     public void ResetStatistic() {
-        this.scores.replaceAll(ignored -> 0);
-        this.shots.replaceAll(ignored -> 0);
+        Collections.fill(this.scores, 0);
+        Collections.fill(this.shots, 0);
     }
 
     public void IncrementShots(int index) {
