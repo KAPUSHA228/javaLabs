@@ -3,9 +3,12 @@ package org.example.lab1new;
 import java.util.ArrayList;
 
 public class Model {
-    ArrayList<IObserver> allServers = new ArrayList<>();
-    GameInfo info = new GameInfo();
-
+    private ArrayList<IObserver> allServers;
+    private GameInfo info;
+    Model(){
+        info= new GameInfo();
+        allServers = new ArrayList<>();
+    }
     public void event() {
         allServers.forEach(IObserver::event);
     }
@@ -17,6 +20,7 @@ public class Model {
     public void addServers(IObserver c) {
         allServers.add(c);
         info.addNewOBS();
+        System.out.println("KOLVO"+ info.getScores());
         event();
     }
 

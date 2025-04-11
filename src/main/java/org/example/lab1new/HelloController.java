@@ -17,18 +17,18 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class HelloController implements IObserver {
-
+    private boolean isFollowing;
+    private boolean isRunning1;
+    private boolean isRunning2;
+    private byte direction1;
+    private byte direction2;
+    private boolean isPaused;
     Model m = BModel.build();
     ClientConnect cc;
     private static final int port = 3124;
     private Socket cs;
     InetAddress ip = null;
-    private boolean isFollowing;
-    private boolean isRunning1;
-    private boolean isRunning2;
-    private boolean isPaused;
-    private byte direction1;
-    private byte direction2;
+
     @FXML
     private Button connecting;
     @FXML
@@ -49,20 +49,21 @@ public class HelloController implements IObserver {
     @Override
     public void event() {
         Platform.runLater(() -> {
+            if (m.getAllInfo().isGameStarted()) {
+                if(!isFollowing){
+                    isFollowing = true;
+                    pane.setOnMouseMoved(this::handleMouseMove);
+                }
+
+            }
+            circle1.setCenterY(m.getAllInfo().getC1().getCenterY());
+            circle2.setCenterY(m.getAllInfo().getC2().getCenterY());
             shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
             hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
         });
-    }
-
-    public HelloController() {
-        isFollowing = false;
-        isRunning1 = false;
-        isRunning2 = false;
-        isPaused = false;
-        direction1 = 1;
-        direction2 = 1;
 
     }
+    public HelloController() {}
     @FXML
     public void initialize() {
         m.addServers(this);
@@ -70,6 +71,7 @@ public class HelloController implements IObserver {
     @FXML
     public void connect() {
         try {
+            System.out.println(parentWindow.getWidth()+" SUKA "+parentWindow.getHeight());
             connecting.setDisable(true);
             connecting.setVisible(false);
             ip = InetAddress.getLocalHost();
@@ -85,66 +87,21 @@ public class HelloController implements IObserver {
         }
 
     }
-
     @FXML
     protected void toStartGame() {
+        cc.sendAction(new ActionMsg(ActionType.START));
         isFollowing = true;
+        //isFollowing = false;
+        isRunning1 = false;
+        isRunning2 = false;
         isPaused = false;
+        direction1 = 1;
+        direction2 = 1;
         pane.setOnMouseMoved(this::handleMouseMove);
-        new Thread(() -> moveCircle1((byte) 1)).start();
-        new Thread(() -> moveCircle2((byte) 1)).start();
+        //new Thread(() -> moveCircle1((byte) 1)).start();
+        //new Thread(() -> moveCircle2((byte) 1)).start();
 
     }
-
-    private void moveCircle1(byte direction) {
-        byte speed = 5;
-        direction1 = direction;
-        if (!isRunning1) {
-            isRunning1 = true;
-
-            while (isFollowing && !isPaused) {
-                double newY = circle1.getCenterY() + speed * direction1;
-
-                if (newY <= 0 || newY >= parentWindow.getHeight() - 30) {
-                    direction1 *= -1;
-                }
-
-                Platform.runLater(() -> circle1.setCenterY(newY));
-                try {
-                    Thread.sleep(16); // ~60 FPS (1000ms / 60 = 16ms)
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            isRunning1 = false;
-        }
-
-    }
-
-    private void moveCircle2(byte direction) {
-        byte speed = 2;
-        direction2 = direction;
-        if (!isRunning2) {
-            isRunning2 = true;
-
-            while (isFollowing && !isPaused) {
-                double newY = circle2.getCenterY() + speed * direction2;
-
-                if (newY <= 0 || newY >= parentWindow.getHeight() - 50) {
-                    direction2 *= -1;
-                }
-
-                Platform.runLater(() -> circle2.setCenterY(newY));
-                try {
-                    Thread.sleep(16); // ~60 FPS (1000ms / 60 = 16ms)
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            isRunning2 = false;
-        }
-    }
-
     private void handleMouseMove(MouseEvent event) {
         double mouseX = Math.max(0, Math.min(event.getX(), pane.getWidth()));
         double mouseY = Math.max(0, Math.min(event.getY(), pane.getHeight()));
@@ -206,7 +163,6 @@ public class HelloController implements IObserver {
             new Thread(() -> moveBullet(bullet)).start();
         }
     }
-
     private void moveBullet(Circle bullet) {
         int speed = 5;
         double bulletRadius = bullet.getRadius();
@@ -262,13 +218,14 @@ public class HelloController implements IObserver {
             try {
                 Thread.sleep(16); // ~60 FPS (1000ms / 60 = 16ms)
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                System.out.println("Sleep error1");
             }
         }
     }
 
     @FXML
     protected void togglePause() {
+        cc.sendAction(new ActionMsg(ActionType.STOP));
         isPaused = !isPaused;
 
         if (isPaused) {
@@ -279,8 +236,8 @@ public class HelloController implements IObserver {
             pane.setOnMouseMoved(this::handleMouseMove);
 
             if (isFollowing) {
-                new Thread(() -> moveCircle1(direction1)).start();
-                new Thread(() -> moveCircle2(direction2)).start();
+                //new Thread(() -> moveCircle1(direction1)).start();
+                //new Thread(() -> moveCircle2(direction2)).start();
             }
         }
     }
@@ -302,6 +259,7 @@ public class HelloController implements IObserver {
         circle2.setCenterY(150);
         pane.setOnMouseMoved(null);
         m.getAllInfo().ResetStatistic();
+        cc.sendAction(new ActionMsg(ActionType.END));
         shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
         System.out.println(m.getAllInfo().getScores());
         hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));

@@ -17,33 +17,30 @@ public class ClientConnect implements Runnable {
     Gson json = new Gson();
     private int clientIndex;
 
-    public ClientConnect(Socket cs, boolean isServer, Model m, Server server, int id) {
+    public ClientConnect(Socket cs, boolean isServer, Model m, Server server) {
         this.cs = cs;
         this.isServer = isServer;
         this.m = m;
         this.server = server;
-        this.clientIndex = id;
         try {
             OutputStream os = cs.getOutputStream();
             dos = new DataOutputStream(os);
             InputStream is = cs.getInputStream();
             dis = new DataInputStream(is);
-            new Thread(this::run).start(); // Запускаем поток для обработки сообщений
+            new Thread(this).start(); // Запускаем поток для обработки сообщений
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("Constructor CC error1");
         }
     }
 
     public ClientConnect(Socket cs, boolean isServer) {
-        this(cs, isServer, BModel.build(), null, 0);
-        this.clientIndex = getAction().getID();
-        System.out.println("MY CLIENT ID " + clientIndex);
+        this(cs, isServer, BModel.build(), null); // Для клиента создаем свою модель
+
     }
 
     Model getModel() {
         return m;
     }
-
     int getID() {
         return clientIndex;
     }
@@ -64,40 +61,57 @@ public class ClientConnect implements Runnable {
                             break;
                         case UPDSC2:
                             System.out.println("Server: Received UPDSC2");
-                            m.getAllInfo().IncreaseScoreI(clientIndex, 2); // Обновляем общую модель
-                            server.broadcast(m.getAllInfo());// Уведомляем всех (рассылка через наблюдателя)
+                            m.getAllInfo().IncreaseScoreI(0, 2);
+                            server.broadcast(m.getAllInfo());
                             break;
                         case UPDSC1:
                             System.out.println("Server: Received UPDSC1");
-                            m.getAllInfo().IncreaseScoreI(clientIndex, 1);
-                            server.broadcast(m.getAllInfo());// Уведомляем всех (рассылка через наблюдателя)
+                            m.getAllInfo().IncreaseScoreI(0, 1);
+                            server.broadcast(m.getAllInfo());
                             break;
                         case UPDSH:
                             System.out.println("Server: Received UPDSH");
-                            m.getAllInfo().IncrementShots(clientIndex);
-                            server.broadcast(m.getAllInfo());// Уведомляем всех (рассылка через наблюдателя)
+                            m.getAllInfo().IncrementShots(0);
+                            server.broadcast(m.getAllInfo());
                             break;
-                        case SETID:
-                            sendAction(new ActionMsg(ActionType.SETID, this.clientIndex));
-                            System.out.println("Server: Received SETID");
+                        case END:
+                            System.out.println("Server: Received END");
+                            m.getAllInfo().setGameStarted(false);
+                            server.setPaused();
+                            server.setFollowing();
+                            m.getAllInfo().ResetStatistic();
+                            server.broadcast(m.getAllInfo());
+                            break;
+                        case STOP:
+                            // m.getAllInfo().togglePause();
+                            server.broadcast(m.getAllInfo());
+                            server.setPaused();
+                            if (!server.getPaused() && server.getFollowing()) {
+                                new Thread(() -> server.moveCircle1((byte) 1)).start();
+                                new Thread(() -> server.moveCircle2((byte) 1)).start();
+                            }
+                            server.broadcast(m.getAllInfo());
+                            break;
+                        case START:
+                            System.out.println("Server: Received START");
+                            m.getAllInfo().setGameStarted(true);
+                            server.setFollowing();
+                            new Thread(() -> server.moveCircle1((byte) 1)).start();
+                            new Thread(() -> server.moveCircle2((byte) 1)).start();
+                            server.broadcast(m.getAllInfo());
                             break;
                         default:
                             System.out.println("Server: Unknown action");
                     }
                 } else {
                     System.out.println("eblo2");
-                    //ActionMsg msg = getAction();
-                    //if (msg.getType() == ActionType.UPDMODEL) {
-                    System.out.println("POIMAL8");
                     GameInfo newInfo = getInfo();
                     m.setInfo(newInfo);
-                    //System.out.println("WAS8 " + m.getAllInfo().getScoreI(0));
                     m.event();
-                    //}
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("Run CC error1");
         }
 
     }
@@ -109,7 +123,8 @@ public class ClientConnect implements Runnable {
             dos.writeUTF(s);
             dos.flush();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("sendAction CC error1");
+
         }
     }
 

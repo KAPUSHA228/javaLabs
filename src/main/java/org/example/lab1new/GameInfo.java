@@ -4,8 +4,29 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class GameInfo {
+
     private ArrayList<Integer> scores = new ArrayList<>();
     private ArrayList<Integer> shots = new ArrayList<>();
+    private final MyCircle c1 = new MyCircle(380.0,150.0,50.0);
+    private final MyCircle c2 = new MyCircle(677.0,150.0,25.0);
+    private  ArrayList<MyCircle> bullets = new ArrayList<>();
+    private boolean isGameStarted = false;
+
+    public boolean isGameStarted() {
+        return this.isGameStarted;
+    }
+
+    public void setGameStarted(boolean started) {
+        this.isGameStarted = started;
+    }
+    public MyCircle getC1() {
+        return this.c1;
+    }
+
+    public MyCircle getC2() {
+        return this.c2;
+    }
+
     public void addClient(){
         this.scores.add(0);
         this.shots.add(0);
@@ -32,8 +53,7 @@ public class GameInfo {
 
     public void addNewOBS() {
         System.out.println("Adding new OBS entry"); // Логирование
-        this.scores.add(0);
-        this.shots.add(0);
+        addClient();
     }
     public void IncreaseScoreI(int index, int val) {
         int tmp = this.scores.get(index) + val;
