@@ -13,19 +13,21 @@ public class ClientConnect implements Runnable {
     DataInputStream dis;
     DataOutputStream dos;
     private final Server server;
-    boolean isServer = false;
+    boolean isServer;
     Gson json = new Gson();
     private int clientIndex;
 
-    public ClientConnect(Socket cs, boolean isServer, Model m, Server server) {
+    public ClientConnect(Socket cs, boolean isServer, Model m, Server server, int id) {
         this.cs = cs;
         this.isServer = isServer;
         this.m = m;
         this.server = server;
+        this.clientIndex=id;
         try {
-            OutputStream os = cs.getOutputStream();
+            System.out.println("ORIGIN ID "+ this.clientIndex);
+            os = cs.getOutputStream();
             dos = new DataOutputStream(os);
-            InputStream is = cs.getInputStream();
+            is = cs.getInputStream();
             dis = new DataInputStream(is);
             new Thread(this).start(); // Запускаем поток для обработки сообщений
         } catch (IOException e) {
@@ -34,13 +36,12 @@ public class ClientConnect implements Runnable {
     }
 
     public ClientConnect(Socket cs, boolean isServer) {
-        this(cs, isServer, BModel.build(), null); // Для клиента создаем свою модель
-
+        this(cs, isServer, BModel.build(), null, -1); // Для клиента создаем свою модель
+        sendAction(new ActionMsg(ActionType.SETID));
+        this.clientIndex= getAction().getId();
+        System.out.println("CLIENT NEW ID "+ this.clientIndex);
     }
 
-    Model getModel() {
-        return m;
-    }
     int getID() {
         return clientIndex;
     }
@@ -61,17 +62,17 @@ public class ClientConnect implements Runnable {
                             break;
                         case UPDSC2:
                             System.out.println("Server: Received UPDSC2");
-                            m.getAllInfo().IncreaseScoreI(0, 2);
+                            m.getAllInfo().IncreaseScoreI(this.clientIndex, 2);
                             server.broadcast(m.getAllInfo());
                             break;
                         case UPDSC1:
                             System.out.println("Server: Received UPDSC1");
-                            m.getAllInfo().IncreaseScoreI(0, 1);
+                            m.getAllInfo().IncreaseScoreI(this.clientIndex, 1);
                             server.broadcast(m.getAllInfo());
                             break;
                         case UPDSH:
                             System.out.println("Server: Received UPDSH");
-                            m.getAllInfo().IncrementShots(0);
+                            m.getAllInfo().IncrementShots(this.clientIndex);
                             server.broadcast(m.getAllInfo());
                             break;
                         case END:
@@ -99,6 +100,9 @@ public class ClientConnect implements Runnable {
                             new Thread(() -> server.moveCircle1((byte) 1)).start();
                             new Thread(() -> server.moveCircle2((byte) 1)).start();
                             server.broadcast(m.getAllInfo());
+                            break;
+                        case SETID:
+                            sendAction(new ActionMsg(ActionType.SETID,this.clientIndex));
                             break;
                         default:
                             System.out.println("Server: Unknown action");

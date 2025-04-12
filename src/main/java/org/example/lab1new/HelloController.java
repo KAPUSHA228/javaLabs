@@ -6,6 +6,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
@@ -28,15 +29,14 @@ public class HelloController implements IObserver {
     private static final int port = 3124;
     private Socket cs;
     InetAddress ip = null;
-
+    @FXML
+    public Label id;
+    @FXML
+    public Pane statMenu;
     @FXML
     private Button connecting;
     @FXML
     private Pane parentWindow;
-    @FXML
-    private Label shoots;
-    @FXML
-    private Label hits;
     @FXML
     private Polygon shooting;
     @FXML
@@ -56,14 +56,31 @@ public class HelloController implements IObserver {
                 }
 
             }
+            statMenu.getChildren().clear();
+            double startX = 10;
+            double startY = 10;
+            double spacing = 10;
+            for (int i = 0; i < m.getAllInfo().getScores().size(); i++) {
+                VBox vbox = new VBox();
+                String  id=String.valueOf(i);
+                String  score=String.valueOf(m.getAllInfo().getScoreI(i));
+                String  shot=String.valueOf(m.getAllInfo().getShotI(i));
+                vbox.setStyle("-fx-border-color: black; -fx-padding: 10;");
+                vbox.setPrefHeight(82.0);
+                vbox.setPrefWidth(120.00);
+                //System.out.println("DATA "+ startX+" "+ vbox.getPrefWidth()+" "+spacing);
+                vbox.setLayoutX(startX+ (vbox.getPrefWidth()+spacing)*i);
+                Label  l1 = new Label("Номер игрока: "+ id);
+                Label  l2 = new Label("Счет игрока: " + score);
+                Label  l3 = new Label("Выстрелов: "+shot);
+                vbox.getChildren().addAll(l1,l2,l3);
+                statMenu.getChildren().add(vbox); // Добавляем Label в контейнер
+            }
             circle1.setCenterY(m.getAllInfo().getC1().getCenterY());
             circle2.setCenterY(m.getAllInfo().getC2().getCenterY());
-            shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
-            hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
         });
 
     }
-    public HelloController() {}
     @FXML
     public void initialize() {
         m.addServers(this);
@@ -79,9 +96,10 @@ public class HelloController implements IObserver {
             cc = new ClientConnect(cs, false);
             cc.sendAction(new ActionMsg(ActionType.UPDMODEL));
             m.setInfo(cc.getInfo());
+            id.setText(String.valueOf(cc.getID()));
             System.out.println("IGET"+ m.getAllInfo().getScoreI(0));
-            shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
-            hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
+            //shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
+            //hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
         } catch (IOException e) {
             System.out.println("Error2");
         }
@@ -145,7 +163,7 @@ public class HelloController implements IObserver {
     protected void handlePolygonClick() {
         if (isFollowing && !isPaused) {
             cc.sendAction(new ActionMsg(ActionType.UPDSH));
-            shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
+            //shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
             Circle bullet = new Circle(5);
 
             double initialX = pane.getLayoutX() + shooting.getLayoutX() + 20;
@@ -260,9 +278,9 @@ public class HelloController implements IObserver {
         pane.setOnMouseMoved(null);
         m.getAllInfo().ResetStatistic();
         cc.sendAction(new ActionMsg(ActionType.END));
-        shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
+        //shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
         System.out.println(m.getAllInfo().getScores());
-        hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
+        //hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
         System.out.println(m.getAllInfo().getShots());
     }
 }

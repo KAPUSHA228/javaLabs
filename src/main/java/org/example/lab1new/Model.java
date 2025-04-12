@@ -3,7 +3,7 @@ package org.example.lab1new;
 import java.util.ArrayList;
 
 public class Model {
-    private ArrayList<IObserver> allServers;
+    private final ArrayList<IObserver> allServers;
     private GameInfo info;
     Model(){
         info= new GameInfo();
@@ -13,10 +13,6 @@ public class Model {
         allServers.forEach(IObserver::event);
     }
 
-    public void addChill(){
-        this.info.addChill(8);
-        event();
-    }
     public void addServers(IObserver c) {
         allServers.add(c);
         info.addNewOBS();
@@ -32,14 +28,4 @@ public class Model {
         this.info = in;
         System.out.println("Было дело");
     }
-
-    void setScores(ArrayList<Integer> sc) {
-        this.info.setAllScore(sc);
     }
-
-    void setShots(ArrayList<Integer> sh) {
-        this.info.setAllShot(sh);
-    }
-
-
-}

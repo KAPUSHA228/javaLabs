@@ -9,7 +9,6 @@ public class GameInfo {
     private ArrayList<Integer> shots = new ArrayList<>();
     private final MyCircle c1 = new MyCircle(380.0,150.0,50.0);
     private final MyCircle c2 = new MyCircle(677.0,150.0,25.0);
-    private  ArrayList<MyCircle> bullets = new ArrayList<>();
     private boolean isGameStarted = false;
 
     public boolean isGameStarted() {
@@ -58,10 +57,6 @@ public class GameInfo {
     public void IncreaseScoreI(int index, int val) {
         int tmp = this.scores.get(index) + val;
         this.scores.set(index, tmp);
-    }
-
-    public void SetScoreI(int index, int val) {
-        this.scores.set(index, val);
     }
 
     public void ResetStatistic() {

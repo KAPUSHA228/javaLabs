@@ -1,8 +1,8 @@
 package org.example.lab1new;
 
 public class ActionMsg {
-    ActionType type;
-    int id = 0;
+    private final ActionType type;
+    private final int id;
     ActionMsg(ActionType type){
         this.type=type;
         this.id=0;
@@ -16,9 +16,5 @@ public class ActionMsg {
     }
     int getId(){
         return id;
-    }
-
-    public void setType(ActionType type) {
-        this.type = type;
     }
 }
