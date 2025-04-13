@@ -18,12 +18,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class HelloController implements IObserver {
-    private boolean isFollowing;
-    private boolean isRunning1;
-    private boolean isRunning2;
+
+
     private byte direction1;
     private byte direction2;
-    private boolean isPaused;
     Model m = BModel.build();
     ClientConnect cc;
     private static final int port = 3124;
@@ -49,31 +47,27 @@ public class HelloController implements IObserver {
     @Override
     public void event() {
         Platform.runLater(() -> {
-            if (m.getAllInfo().isGameStarted()) {
-                if(!isFollowing){
-                    isFollowing = true;
-                    pane.setOnMouseMoved(this::handleMouseMove);
-                }
-
+            if (m.getAllInfo().isGameStarted()&&!m.getAllInfo().isPaused()) {
+                pane.setOnMouseMoved(this::handleMouseMove);
+            } else {
+                pane.setOnMouseMoved(null);
             }
             statMenu.getChildren().clear();
             double startX = 10;
-            double startY = 10;
             double spacing = 10;
             for (int i = 0; i < m.getAllInfo().getScores().size(); i++) {
                 VBox vbox = new VBox();
-                String  id=String.valueOf(i);
-                String  score=String.valueOf(m.getAllInfo().getScoreI(i));
-                String  shot=String.valueOf(m.getAllInfo().getShotI(i));
+                String id = String.valueOf(i);
+                String score = String.valueOf(m.getAllInfo().getScoreI(i));
+                String shot = String.valueOf(m.getAllInfo().getShotI(i));
                 vbox.setStyle("-fx-border-color: black; -fx-padding: 10;");
                 vbox.setPrefHeight(82.0);
                 vbox.setPrefWidth(120.00);
-                //System.out.println("DATA "+ startX+" "+ vbox.getPrefWidth()+" "+spacing);
-                vbox.setLayoutX(startX+ (vbox.getPrefWidth()+spacing)*i);
-                Label  l1 = new Label("Номер игрока: "+ id);
-                Label  l2 = new Label("Счет игрока: " + score);
-                Label  l3 = new Label("Выстрелов: "+shot);
-                vbox.getChildren().addAll(l1,l2,l3);
+                vbox.setLayoutX(startX + (vbox.getPrefWidth() + spacing) * i);
+                Label l1 = new Label("Номер игрока: " + id);
+                Label l2 = new Label("Счет игрока: " + score);
+                Label l3 = new Label("Выстрелов: " + shot);
+                vbox.getChildren().addAll(l1, l2, l3);
                 statMenu.getChildren().add(vbox); // Добавляем Label в контейнер
             }
             circle1.setCenterY(m.getAllInfo().getC1().getCenterY());
@@ -81,14 +75,16 @@ public class HelloController implements IObserver {
         });
 
     }
+
     @FXML
     public void initialize() {
         m.addServers(this);
     }
+
     @FXML
     public void connect() {
         try {
-            System.out.println(parentWindow.getWidth()+" SUKA "+parentWindow.getHeight());
+            System.out.println(parentWindow.getWidth() + " SUKA " + parentWindow.getHeight());
             connecting.setDisable(true);
             connecting.setVisible(false);
             ip = InetAddress.getLocalHost();
@@ -97,29 +93,21 @@ public class HelloController implements IObserver {
             cc.sendAction(new ActionMsg(ActionType.UPDMODEL));
             m.setInfo(cc.getInfo());
             id.setText(String.valueOf(cc.getID()));
-            System.out.println("IGET"+ m.getAllInfo().getScoreI(0));
-            //shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
-            //hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
+            System.out.println("IGET" + m.getAllInfo().getScoreI(0));
         } catch (IOException e) {
             System.out.println("Error2");
         }
 
     }
+
     @FXML
     protected void toStartGame() {
         cc.sendAction(new ActionMsg(ActionType.START));
-        isFollowing = true;
-        //isFollowing = false;
-        isRunning1 = false;
-        isRunning2 = false;
-        isPaused = false;
         direction1 = 1;
         direction2 = 1;
         pane.setOnMouseMoved(this::handleMouseMove);
-        //new Thread(() -> moveCircle1((byte) 1)).start();
-        //new Thread(() -> moveCircle2((byte) 1)).start();
-
     }
+
     private void handleMouseMove(MouseEvent event) {
         double mouseX = Math.max(0, Math.min(event.getX(), pane.getWidth()));
         double mouseY = Math.max(0, Math.min(event.getY(), pane.getHeight()));
@@ -161,9 +149,8 @@ public class HelloController implements IObserver {
 
     @FXML
     protected void handlePolygonClick() {
-        if (isFollowing && !isPaused) {
+        if (m.getAllInfo().isGameStarted() && !m.getAllInfo().isPaused()) {
             cc.sendAction(new ActionMsg(ActionType.UPDSH));
-            //shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
             Circle bullet = new Circle(5);
 
             double initialX = pane.getLayoutX() + shooting.getLayoutX() + 20;
@@ -181,12 +168,13 @@ public class HelloController implements IObserver {
             new Thread(() -> moveBullet(bullet)).start();
         }
     }
+
     private void moveBullet(Circle bullet) {
         int speed = 5;
         double bulletRadius = bullet.getRadius();
         AtomicBoolean isBulletMoving = new AtomicBoolean(true);
 
-        while (isBulletMoving.get() && !isPaused) {
+        while (isBulletMoving.get() && !m.getAllInfo().isPaused()) {
             double newX = bullet.getCenterX() + speed;
             double newY = bullet.getCenterY();
 
@@ -211,9 +199,7 @@ public class HelloController implements IObserver {
                         parentWindow.getChildren().remove(bullet);
                         System.out.println("bullet remove 2");
                         System.out.println(newX + " " + newY + " " + bulletRadius + " " + goalX1 + " " + goalY1 + " " + r1);
-                        //m.getAllInfo().IncreaseScoreI(0,2);
                         cc.sendAction(new ActionMsg(ActionType.UPDSC2));
-                       // hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
                     });
 
                 } else {
@@ -223,16 +209,13 @@ public class HelloController implements IObserver {
                             parentWindow.getChildren().remove(bullet);
                             System.out.println("bullet remove 3");
                             System.out.println(newX + " " + newY + " " + bulletRadius + " " + goalX2 + " " + goalY2 + " " + r2);
-                            //m.getAllInfo().IncreaseScoreI(0,1);
                             cc.sendAction(new ActionMsg(ActionType.UPDSC1));
-                            //hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
                         });
                     } else {
                         Platform.runLater(() -> bullet.setCenterX(newX));
                     }
                 }
             }
-           // System.out.println("stupapupa"+m.getAllInfo().getScores());
             try {
                 Thread.sleep(16); // ~60 FPS (1000ms / 60 = 16ms)
             } catch (InterruptedException e) {
@@ -244,20 +227,6 @@ public class HelloController implements IObserver {
     @FXML
     protected void togglePause() {
         cc.sendAction(new ActionMsg(ActionType.STOP));
-        isPaused = !isPaused;
-
-        if (isPaused) {
-            System.out.println("Go on");
-            pane.setOnMouseMoved(null);
-        } else {
-            System.out.println("On pause");
-            pane.setOnMouseMoved(this::handleMouseMove);
-
-            if (isFollowing) {
-                //new Thread(() -> moveCircle1(direction1)).start();
-                //new Thread(() -> moveCircle2(direction2)).start();
-            }
-        }
     }
 
     private boolean checkCollision(double x1, double y1, double r1, double x2, double y2, double r2) {
@@ -269,18 +238,12 @@ public class HelloController implements IObserver {
 
     @FXML
     protected void toEndGame() {
-        isFollowing = false;
-        isPaused = false;
-        isRunning1 = false;
-        isRunning2 = false;
         circle1.setCenterY(150);
         circle2.setCenterY(150);
         pane.setOnMouseMoved(null);
         m.getAllInfo().ResetStatistic();
         cc.sendAction(new ActionMsg(ActionType.END));
-        //shoots.setText(String.valueOf(m.getAllInfo().getShotI(0)));
         System.out.println(m.getAllInfo().getScores());
-        //hits.setText(String.valueOf(m.getAllInfo().getScoreI(0)));
         System.out.println(m.getAllInfo().getShots());
     }
 }

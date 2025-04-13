@@ -3,7 +3,7 @@ package org.example.lab1new;
 import java.util.ArrayList;
 
 public class Model {
-    private final ArrayList<IObserver> allServers;
+    private ArrayList<IObserver> allServers;
     private GameInfo info;
     Model(){
         info= new GameInfo();
@@ -16,7 +16,6 @@ public class Model {
     public void addServers(IObserver c) {
         allServers.add(c);
         info.addNewOBS();
-        System.out.println("KOLVO"+ info.getScores());
         event();
     }
 
@@ -24,8 +23,15 @@ public class Model {
         return info;
     }
 
+    public ArrayList<IObserver> getAllServers() {
+        return allServers;
+    }
+
+    void setModel(Model m){
+        this.allServers=m.getAllServers();
+        this.info=m.getAllInfo();
+    }
     void setInfo(GameInfo in) {
         this.info = in;
-        System.out.println("Было дело");
     }
     }

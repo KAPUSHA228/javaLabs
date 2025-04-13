@@ -53,7 +53,6 @@ public class ClientConnect implements Runnable {
             dis = new DataInputStream(is);
             while (true) {
                 if (isServer) {
-                    System.out.println("eblo");
                     ActionMsg msg = getAction();
                     switch (msg.getType()) {
                         case UPDMODEL:
@@ -63,43 +62,47 @@ public class ClientConnect implements Runnable {
                         case UPDSC2:
                             System.out.println("Server: Received UPDSC2");
                             m.getAllInfo().IncreaseScoreI(this.clientIndex, 2);
-                            server.broadcast(m.getAllInfo());
+                            server.setModel(m);
+                            server.broadcast();
                             break;
                         case UPDSC1:
                             System.out.println("Server: Received UPDSC1");
                             m.getAllInfo().IncreaseScoreI(this.clientIndex, 1);
-                            server.broadcast(m.getAllInfo());
+                            server.setModel(m);
+                            server.broadcast();
                             break;
                         case UPDSH:
                             System.out.println("Server: Received UPDSH");
                             m.getAllInfo().IncrementShots(this.clientIndex);
-                            server.broadcast(m.getAllInfo());
+                            server.setModel(m);
+                            server.broadcast();
                             break;
                         case END:
                             System.out.println("Server: Received END");
                             m.getAllInfo().setGameStarted(false);
-                            server.setPaused();
-                            server.setFollowing();
+                            server.setFollowing(false);
                             m.getAllInfo().ResetStatistic();
-                            server.broadcast(m.getAllInfo());
+                            server.setModel(m);
+                            server.broadcast();
                             break;
                         case STOP:
-                            // m.getAllInfo().togglePause();
-                            server.broadcast(m.getAllInfo());
-                            server.setPaused();
+                            System.out.println("Server: Received STOP");
+                            server.togglePaused();
                             if (!server.getPaused() && server.getFollowing()) {
-                                new Thread(() -> server.moveCircle1((byte) 1)).start();
-                                new Thread(() -> server.moveCircle2((byte) 1)).start();
+                                new Thread(() -> server.moveCircle1(m.getAllInfo().getDirection1())).start();
+                                new Thread(() -> server.moveCircle2(m.getAllInfo().getDirection2())).start();
                             }
-                            server.broadcast(m.getAllInfo());
+                            server.setModel(m);
+                            server.broadcast();
                             break;
                         case START:
                             System.out.println("Server: Received START");
                             m.getAllInfo().setGameStarted(true);
-                            server.setFollowing();
+                            server.setFollowing(true);
                             new Thread(() -> server.moveCircle1((byte) 1)).start();
                             new Thread(() -> server.moveCircle2((byte) 1)).start();
-                            server.broadcast(m.getAllInfo());
+                            server.setModel(m);
+                            server.broadcast();
                             break;
                         case SETID:
                             sendAction(new ActionMsg(ActionType.SETID,this.clientIndex));
@@ -108,7 +111,6 @@ public class ClientConnect implements Runnable {
                             System.out.println("Server: Unknown action");
                     }
                 } else {
-                    System.out.println("eblo2");
                     GameInfo newInfo = getInfo();
                     m.setInfo(newInfo);
                     m.event();
@@ -128,7 +130,6 @@ public class ClientConnect implements Runnable {
             dos.flush();
         } catch (IOException e) {
             System.out.println("sendAction CC error1");
-
         }
     }
 
