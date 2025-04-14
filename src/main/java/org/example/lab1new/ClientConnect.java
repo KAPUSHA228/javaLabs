@@ -88,15 +88,14 @@ public class ClientConnect implements Runnable {
                             break;
                         case END:
                             System.out.println("Server: Received END");
-                            m.getAllInfo().setGameStarted(false);
-                            server.setFollowing(false);
-                            m.getAllInfo().ResetStatistic();
-                            server.setModel(m);
+                            server.end();
                             server.broadcast();
                             break;
                         case STOP:
                             System.out.println("Server: Received STOP");
-                            server.togglePaused();
+                            if (m.getAllInfo().isGameStarted()) {
+                                server.togglePaused();
+                            }
                             if (!server.getPaused() && server.getFollowing()) {
                                 new Thread(() -> server.moveCircle1(m.getAllInfo().getDirection1())).start();
                                 new Thread(() -> server.moveCircle2(m.getAllInfo().getDirection2())).start();

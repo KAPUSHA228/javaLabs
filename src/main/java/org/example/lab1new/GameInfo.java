@@ -105,6 +105,12 @@ public class GameInfo {
     public void ResetStatistic() {
         Collections.fill(this.scores, 0);
         Collections.fill(this.shots, 0);
+        c1.setCenterY(150.0);
+        c2.setCenterY(150.0);
+        isGameStarted = false;
+        isGameFollow = false;
+        isPaused = false;
+        winnerId = -1;
     }
 
     public void IncrementShots(int index) {

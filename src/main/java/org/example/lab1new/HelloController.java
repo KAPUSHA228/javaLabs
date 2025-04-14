@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class HelloController implements IObserver {
     private final Model m = BModel.build();
     private ClientConnect cc;
+    boolean showWinner = false;
     private static final int port = 3124;
     @FXML
     private Label id;
@@ -70,11 +71,13 @@ public class HelloController implements IObserver {
             }
             circle1.setCenterY(m.getAllInfo().getC1().getCenterY());
             circle2.setCenterY(m.getAllInfo().getC2().getCenterY());
-            if (m.getAllInfo().getWinnerId()!=-1) {
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("GAME OVER");
-                    alert.setContentText("WINNER IS "+m.getAllInfo().getWinnerId());
-                    alert.showAndWait();
+            if (m.getAllInfo().getWinnerId() != -1 && !showWinner) {
+                showWinner = true;
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("GAME OVER");
+                alert.setContentText("WINNER IS " + m.getAllInfo().getWinnerId());
+                alert.showAndWait();
+                cc.sendAction(new ActionMsg(ActionType.END));
             }
         });
     }
@@ -110,6 +113,7 @@ public class HelloController implements IObserver {
 
     @FXML
     protected void toStartGame() {
+        showWinner=false;
         cc.sendAction(new ActionMsg(ActionType.START));
     }
 

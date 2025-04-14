@@ -110,7 +110,6 @@ public class Server {
         byte direction2 = direction;
         if (!isRunning2) {
             isRunning2 = true;
-
             while (m.getAllInfo().isGameFollow() && !m.getAllInfo().isPaused()) {
                 double newY = m.getAllInfo().getC2().getCenterY() + speed * direction2;
                 if (newY <= 0 || newY >= 286.4 - 50) {
@@ -141,6 +140,18 @@ public class Server {
         for (Boolean i : ready)
             if (!i) return false;
         return true;
+
+    }
+
+    public void end() {
+        m.getAllInfo().ResetStatistic();
+        m.getAllInfo().setGameStarted(false);
+        m.getAllInfo().setGameFollow(false);
+        isRunning1 = false;
+        isRunning2 = false;
+        m.getAllInfo().setPaused(false);
+        m.getAllInfo().setDirection1((byte) 1);
+        m.getAllInfo().setDirection2((byte) 1);
 
     }
 }
