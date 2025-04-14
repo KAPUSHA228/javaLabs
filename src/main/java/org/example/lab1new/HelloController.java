@@ -2,6 +2,7 @@ package org.example.lab1new;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
@@ -18,19 +19,15 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class HelloController implements IObserver {
-
-
-    private byte direction1;
-    private byte direction2;
-    Model m = BModel.build();
-    ClientConnect cc;
+    private final Model m = BModel.build();
+    private ClientConnect cc;
     private static final int port = 3124;
-    private Socket cs;
-    InetAddress ip = null;
     @FXML
-    public Label id;
+    private Label id;
     @FXML
-    public Pane statMenu;
+    private Button preparing;
+    @FXML
+    private Pane statMenu;
     @FXML
     private Button connecting;
     @FXML
@@ -47,7 +44,8 @@ public class HelloController implements IObserver {
     @Override
     public void event() {
         Platform.runLater(() -> {
-            if (m.getAllInfo().isGameStarted()&&!m.getAllInfo().isPaused()) {
+
+            if (m.getAllInfo().isGameStarted() && !m.getAllInfo().isPaused()) {
                 pane.setOnMouseMoved(this::handleMouseMove);
             } else {
                 pane.setOnMouseMoved(null);
@@ -72,28 +70,38 @@ public class HelloController implements IObserver {
             }
             circle1.setCenterY(m.getAllInfo().getC1().getCenterY());
             circle2.setCenterY(m.getAllInfo().getC2().getCenterY());
+            if (m.getAllInfo().getWinnerId()!=-1) {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("GAME OVER");
+                    alert.setContentText("WINNER IS "+m.getAllInfo().getWinnerId());
+                    alert.showAndWait();
+            }
         });
-
     }
 
     @FXML
     public void initialize() {
+        preparing.setDisable(true);
+        preparing.setVisible(false);
         m.addServers(this);
     }
 
     @FXML
     public void connect() {
         try {
-            System.out.println(parentWindow.getWidth() + " SUKA " + parentWindow.getHeight());
             connecting.setDisable(true);
             connecting.setVisible(false);
-            ip = InetAddress.getLocalHost();
-            cs = new Socket(ip, port);
+            InetAddress ip = InetAddress.getLocalHost();
+            Socket cs = new Socket(ip, port);
             cc = new ClientConnect(cs, false);
             cc.sendAction(new ActionMsg(ActionType.UPDMODEL));
             m.setInfo(cc.getInfo());
             id.setText(String.valueOf(cc.getID()));
-            System.out.println("IGET" + m.getAllInfo().getScoreI(0));
+            if (!m.getAllInfo().isGameStarted()) {
+                preparing.setDisable(false);
+                preparing.setVisible(true);
+            }
+            //System.out.println("IGET" + m.getAllInfo().getScoreI(0));
         } catch (IOException e) {
             System.out.println("Error2");
         }
@@ -103,9 +111,6 @@ public class HelloController implements IObserver {
     @FXML
     protected void toStartGame() {
         cc.sendAction(new ActionMsg(ActionType.START));
-        direction1 = 1;
-        direction2 = 1;
-        pane.setOnMouseMoved(this::handleMouseMove);
     }
 
     private void handleMouseMove(MouseEvent event) {
@@ -227,6 +232,13 @@ public class HelloController implements IObserver {
     @FXML
     protected void togglePause() {
         cc.sendAction(new ActionMsg(ActionType.STOP));
+    }
+
+    @FXML
+    protected void toReady() {
+        cc.sendAction(new ActionMsg(ActionType.READY));
+        preparing.setDisable(true);
+        preparing.setVisible(false);
     }
 
     private boolean checkCollision(double x1, double y1, double r1, double x2, double y2, double r2) {

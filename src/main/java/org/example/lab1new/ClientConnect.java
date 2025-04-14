@@ -7,14 +7,13 @@ import java.net.Socket;
 
 public class ClientConnect implements Runnable {
     private final Model m;
-    Socket cs;
-    InputStream is;
-    OutputStream os;
-    DataInputStream dis;
-    DataOutputStream dos;
+    private final Socket cs;
+    private InputStream is;
+    private DataInputStream dis;
+    private DataOutputStream dos;
     private final Server server;
-    boolean isServer;
-    Gson json = new Gson();
+    private final boolean isServer;
+    private final Gson json = new Gson();
     private int clientIndex;
 
     public ClientConnect(Socket cs, boolean isServer, Model m, Server server, int id) {
@@ -22,10 +21,10 @@ public class ClientConnect implements Runnable {
         this.isServer = isServer;
         this.m = m;
         this.server = server;
-        this.clientIndex=id;
+        this.clientIndex = id;
         try {
-            System.out.println("ORIGIN ID "+ this.clientIndex);
-            os = cs.getOutputStream();
+            System.out.println("ORIGIN ID " + this.clientIndex);
+            OutputStream os = cs.getOutputStream();
             dos = new DataOutputStream(os);
             is = cs.getInputStream();
             dis = new DataInputStream(is);
@@ -38,8 +37,8 @@ public class ClientConnect implements Runnable {
     public ClientConnect(Socket cs, boolean isServer) {
         this(cs, isServer, BModel.build(), null, -1); // Для клиента создаем свою модель
         sendAction(new ActionMsg(ActionType.SETID));
-        this.clientIndex= getAction().getId();
-        System.out.println("CLIENT NEW ID "+ this.clientIndex);
+        this.clientIndex = getAction().getId();
+        System.out.println("CLIENT NEW ID " + this.clientIndex);
     }
 
     int getID() {
@@ -62,12 +61,22 @@ public class ClientConnect implements Runnable {
                         case UPDSC2:
                             System.out.println("Server: Received UPDSC2");
                             m.getAllInfo().IncreaseScoreI(this.clientIndex, 2);
+                            if (m.getAllInfo().getScoreI(this.clientIndex) >= 6) {
+                                m.getAllInfo().setWinner(this.clientIndex);
+                                m.getAllInfo().setGameStarted(false);
+                                m.getAllInfo().setGameFollow(false);
+                            }
                             server.setModel(m);
                             server.broadcast();
                             break;
                         case UPDSC1:
                             System.out.println("Server: Received UPDSC1");
                             m.getAllInfo().IncreaseScoreI(this.clientIndex, 1);
+                            if (m.getAllInfo().getScoreI(this.clientIndex) >= 6) {
+                                m.getAllInfo().setWinner(this.clientIndex);
+                                m.getAllInfo().setGameStarted(false);
+                                m.getAllInfo().setGameFollow(false);
+                            }
                             server.setModel(m);
                             server.broadcast();
                             break;
@@ -97,15 +106,20 @@ public class ClientConnect implements Runnable {
                             break;
                         case START:
                             System.out.println("Server: Received START");
-                            m.getAllInfo().setGameStarted(true);
-                            server.setFollowing(true);
-                            new Thread(() -> server.moveCircle1((byte) 1)).start();
-                            new Thread(() -> server.moveCircle2((byte) 1)).start();
-                            server.setModel(m);
-                            server.broadcast();
+                            if (server.checkReady() && !m.getAllInfo().isGameStarted()) {
+                                m.getAllInfo().setGameStarted(true);
+                                server.setFollowing(true);
+                                new Thread(() -> server.moveCircle1((byte) 1)).start();
+                                new Thread(() -> server.moveCircle2((byte) 1)).start();
+                                server.setModel(m);
+                                server.broadcast();
+                            }
+                            break;
+                        case READY:
+                            server.setReady(getID());
                             break;
                         case SETID:
-                            sendAction(new ActionMsg(ActionType.SETID,this.clientIndex));
+                            sendAction(new ActionMsg(ActionType.SETID, this.clientIndex));
                             break;
                         default:
                             System.out.println("Server: Unknown action");

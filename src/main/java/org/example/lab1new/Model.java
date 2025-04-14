@@ -5,10 +5,12 @@ import java.util.ArrayList;
 public class Model {
     private ArrayList<IObserver> allServers;
     private GameInfo info;
-    Model(){
-        info= new GameInfo();
+
+    Model() {
+        info = new GameInfo();
         allServers = new ArrayList<>();
     }
+
     public void event() {
         allServers.forEach(IObserver::event);
     }
@@ -27,11 +29,12 @@ public class Model {
         return allServers;
     }
 
-    void setModel(Model m){
-        this.allServers=m.getAllServers();
-        this.info=m.getAllInfo();
+    void setModel(Model m) {
+        this.allServers = m.getAllServers();
+        this.info = m.getAllInfo();
     }
+
     void setInfo(GameInfo in) {
         this.info = in;
     }
-    }
+}

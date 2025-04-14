@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class GameInfo {
-    private ArrayList<Integer> scores = new ArrayList<>();
-    private ArrayList<Integer> shots = new ArrayList<>();
+    private final ArrayList<Integer> scores = new ArrayList<>();
+    private final ArrayList<Integer> shots = new ArrayList<>();
     private final MyCircle c1 = new MyCircle(380.0, 150.0, 50.0);
     private final MyCircle c2 = new MyCircle(677.0, 150.0, 25.0);
     private boolean isGameStarted = false;
@@ -13,6 +13,15 @@ public class GameInfo {
     private boolean isPaused = false;
     private byte direction1;
     private byte direction2;
+    private int winnerId = -1; // По умолчанию -1 означает, что победителя нет
+
+    public void setWinner(int id) {
+        winnerId = id;
+    }
+
+    public int getWinnerId() {
+        return winnerId;
+    }
 
     public boolean isGameStarted() {
         return this.isGameStarted;
