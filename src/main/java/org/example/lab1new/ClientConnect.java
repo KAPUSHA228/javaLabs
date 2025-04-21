@@ -106,7 +106,7 @@ public class ClientConnect implements Runnable {
                         case START:
                             System.out.println("Server: Received START");
                             if (server.checkReady() && !m.getAllInfo().isGameStarted()) {
-                                m.getAllInfo().setGameStarted(true);
+                                server.setStarting(true);
                                 server.setFollowing(true);
                                 new Thread(() -> server.moveCircle1((byte) 1)).start();
                                 new Thread(() -> server.moveCircle2((byte) 1)).start();
@@ -115,7 +115,9 @@ public class ClientConnect implements Runnable {
                             }
                             break;
                         case READY:
-                            server.setReady(getID());
+                            m.getAllInfo().setReady(getID(), true);
+                            server.setModel(m);
+                            server.broadcast();
                             break;
                         case SETID:
                             sendAction(new ActionMsg(ActionType.SETID, this.clientIndex));
@@ -135,7 +137,7 @@ public class ClientConnect implements Runnable {
 
     }
 
-    void sendAction(ActionMsg msg) {
+    synchronized void sendAction(ActionMsg msg) {
         try {
             String s = json.toJson(msg);
             System.out.println("HI");
@@ -146,7 +148,7 @@ public class ClientConnect implements Runnable {
         }
     }
 
-    ActionMsg getAction() {
+     ActionMsg getAction() {
         try {
             String s = dis.readUTF();
             return json.fromJson(s, ActionMsg.class);
@@ -155,7 +157,7 @@ public class ClientConnect implements Runnable {
         }
     }
 
-    void sendInfo(GameInfo msg) {
+    synchronized void sendInfo(GameInfo msg) {
         try {
             String s = json.toJson(msg);
             System.out.println("HI2");
@@ -166,7 +168,7 @@ public class ClientConnect implements Runnable {
         }
     }
 
-    GameInfo getInfo() {
+     GameInfo getInfo() {
         try {
             String s = dis.readUTF();
             return json.fromJson(s, GameInfo.class);

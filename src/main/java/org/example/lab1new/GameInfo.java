@@ -6,6 +6,7 @@ import java.util.Collections;
 public class GameInfo {
     private final ArrayList<Integer> scores = new ArrayList<>();
     private final ArrayList<Integer> shots = new ArrayList<>();
+    private final ArrayList<Boolean> ready = new ArrayList<>();
     private final MyCircle c1 = new MyCircle(380.0, 150.0, 50.0);
     private final MyCircle c2 = new MyCircle(677.0, 150.0, 25.0);
     private boolean isGameStarted = false;
@@ -15,7 +16,7 @@ public class GameInfo {
     private byte direction2;
     private int winnerId = -1; // По умолчанию -1 означает, что победителя нет
 
-    public void setWinner(int id) {
+    public synchronized void setWinner(int id) {
         winnerId = id;
     }
 
@@ -35,15 +36,15 @@ public class GameInfo {
         return this.isPaused;
     }
 
-    public void setPaused(boolean paused) {
+    public synchronized void setPaused(boolean paused) {
         this.isPaused = paused;
     }
 
-    public void setDirection2(byte direction2) {
+    public synchronized void setDirection2(byte direction2) {
         this.direction2 = direction2;
     }
 
-    public void setDirection1(byte direction1) {
+    public synchronized void setDirection1(byte direction1) {
         this.direction1 = direction1;
     }
 
@@ -55,14 +56,22 @@ public class GameInfo {
         return this.direction1;
     }
 
-    public void setGameStarted(boolean started) {
+    public synchronized void setGameStarted(boolean started) {
         this.isGameStarted = started;
     }
 
-    public void setGameFollow(boolean follow) {
+    public synchronized void setGameFollow(boolean follow) {
         this.isGameFollow = follow;
     }
-
+    void setReady(int index, boolean val) {
+        ready.set(index, val);
+    }
+    boolean getReadyI(int index){
+        return ready.get(index);
+    }
+    ArrayList<Boolean> getReady(){
+        return ready;
+    }
     public MyCircle getC1() {
         return this.c1;
     }
@@ -71,9 +80,10 @@ public class GameInfo {
         return this.c2;
     }
 
-    public void addClient() {
+    public synchronized void addClient() {
         this.scores.add(0);
         this.shots.add(0);
+        this.ready.add(false);
     }
 
     public ArrayList<Integer> getShots() {
@@ -97,12 +107,12 @@ public class GameInfo {
         addClient();
     }
 
-    public void IncreaseScoreI(int index, int val) {
+    public synchronized void IncreaseScoreI(int index, int val) {
         int tmp = this.scores.get(index) + val;
         this.scores.set(index, tmp);
     }
 
-    public void ResetStatistic() {
+    public synchronized void ResetStatistic() {
         Collections.fill(this.scores, 0);
         Collections.fill(this.shots, 0);
         c1.setCenterY(150.0);
@@ -113,7 +123,7 @@ public class GameInfo {
         winnerId = -1;
     }
 
-    public void IncrementShots(int index) {
+    public synchronized void IncrementShots(int index) {
         int tmp = this.shots.get(index) + 1;
         this.shots.set(index, tmp);
     }

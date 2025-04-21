@@ -10,9 +10,9 @@ public class Server {
     private static final int port = 3124;
     private final Model m = BModel.build();
     private final ArrayList<ClientConnect> list = new ArrayList<>();
-    private final ArrayList<Boolean> ready = new ArrayList<>();
 
     Server() {
+        m.getAllInfo().setGameStarted(false);
         m.getAllInfo().setGameFollow(false);
         isRunning1 = false;
         isRunning2 = false;
@@ -38,9 +38,6 @@ public class Server {
                     synchronized (list) {
                         list.add(cc);
                     }
-                    synchronized (ready) {
-                        ready.add(false);
-                    }
                     new Thread(cc).start();
                     cc.sendAction(new ActionMsg(ActionType.UPDMODEL));
                     cc.sendInfo(m.getAllInfo()); // Отправляем данные сразу после подключения
@@ -59,12 +56,12 @@ public class Server {
         this.m.setModel(m);
     }
 
-    void setReady(int index) {
-        ready.set(index, true);
-    }
 
     public void setFollowing(boolean k) {
         m.getAllInfo().setGameFollow(k);
+    }
+    public void setStarting(boolean k) {
+        m.getAllInfo().setGameStarted(k);
     }
 
     public void togglePaused() {
@@ -137,7 +134,7 @@ public class Server {
     }
 
     public boolean checkReady() {
-        for (Boolean i : ready)
+        for (Boolean i : m.getAllInfo().getReady())
             if (!i) return false;
         return true;
 
@@ -152,6 +149,9 @@ public class Server {
         m.getAllInfo().setPaused(false);
         m.getAllInfo().setDirection1((byte) 1);
         m.getAllInfo().setDirection2((byte) 1);
-
+        for (int i=0;i<m.getAllInfo().getReady().size();i++){
+            m.getAllInfo().setReady(i, false);
+        }
+        broadcast();
     }
 }

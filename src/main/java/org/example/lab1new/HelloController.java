@@ -45,7 +45,10 @@ public class HelloController implements IObserver {
     @Override
     public void event() {
         Platform.runLater(() -> {
-
+            if((cc!=null)&&!m.getAllInfo().getReadyI(cc.getID())){
+                preparing.setDisable(false);
+                preparing.setVisible(true);
+            }
             if (m.getAllInfo().isGameStarted() && !m.getAllInfo().isPaused()) {
                 pane.setOnMouseMoved(this::handleMouseMove);
             } else {
