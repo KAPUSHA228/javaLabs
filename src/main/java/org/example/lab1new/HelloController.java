@@ -7,6 +7,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -16,15 +17,17 @@ import javafx.scene.shape.Polygon;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class HelloController implements IObserver {
     private final Model m = BModel.build();
-
     private ClientConnect cc;
     boolean showWinner = false;
     private static final int port = 3124;
+    @FXML
+    public GridPane database;
     @FXML
     public TextField naming;
     @FXML
@@ -49,7 +52,7 @@ public class HelloController implements IObserver {
     @Override
     public void event() {
         Platform.runLater(() -> {
-            if((cc!=null)&&!m.getAllInfo().getReadyI(cc.getID())){
+            if ((cc != null) && !m.getAllInfo().getReadyI(cc.getID())) {
                 preparing.setDisable(false);
                 preparing.setVisible(true);
             }
@@ -80,6 +83,11 @@ public class HelloController implements IObserver {
             }
             circle1.setCenterY(m.getAllInfo().getC1().getCenterY());
             circle2.setCenterY(m.getAllInfo().getC2().getCenterY());
+//            if (cc != null) {
+//                cc.sendAction(new ActionMsg(ActionType.GETDB));
+//                ArrayList<Player> board = cc.getAction().getLeaderBoard();
+//                database.addRow(0, new Label(board.get(0).getName()), new Label(String.valueOf(board.get(0).getWins())));
+//            }
             if (m.getAllInfo().getWinnerId() != -1 && !showWinner) {
                 showWinner = true;
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -125,7 +133,7 @@ public class HelloController implements IObserver {
 
     @FXML
     protected void toStartGame() {
-        showWinner=false;
+        showWinner = false;
         cc.sendAction(new ActionMsg(ActionType.START));
     }
 

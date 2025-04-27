@@ -36,6 +36,8 @@ public class Server {
                     int clientIndex = list.size();
                     ClientConnect cc = new ClientConnect(cs, true, m, this, clientIndex);
                     int port = cs.getPort();
+                    System.out.println("NAME " + cc.getPlayerName());
+
                     System.out.println("SERVER's MODEL " + m.getAllInfo().getScores());
                     System.out.println("Connected to: " + port);
                     synchronized (list) {
@@ -54,50 +56,17 @@ public class Server {
         }
     }
 
-    public synchronized boolean isNameUnique(String name) {
-        try (Connection conn = DatabaseInit.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement("SELECT COUNT(*) FROM players WHERE name = ?")) {
-            pstmt.setString(1, name);
-            ResultSet rs = pstmt.executeQuery();
-            return rs.getInt(1) == 0;
-        } catch (SQLException e) {
-            System.err.println("Ошибка проверки имени: " + e.getMessage());
-            return false;
-        }
-    }
 
     public synchronized void savePlayer(String name) {
-        try (Connection conn = DatabaseInit.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement("INSERT INTO players (name) VALUES (?)")) {
-            pstmt.setString(1, name);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("Ошибка сохранения игрока: " + e.getMessage());
-        }
+        DatabaseInit.savePlayer(name);
     }
 
     public synchronized void incrementWins(String name) {
-        try (Connection conn = DatabaseInit.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement("UPDATE players SET wins = wins + 1 WHERE name = ?")) {
-            pstmt.setString(1, name);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("Ошибка обновления побед: " + e.getMessage());
-        }
+        DatabaseInit.incrementWins(name);
     }
 
-    public synchronized List<Player> getLeaderboard() {
-        List<Player> leaders = new ArrayList<>();
-        try (Connection conn = DatabaseInit.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement("SELECT name, wins FROM players ORDER BY wins DESC LIMIT 10");
-             ResultSet rs = pstmt.executeQuery()) {
-            while (rs.next()) {
-                leaders.add(new Player(rs.getString("name"), rs.getInt("wins")));
-            }
-        } catch (SQLException e) {
-            System.err.println("Ошибка получения таблицы лидеров: " + e.getMessage());
-        }
-        return leaders;
+    public synchronized ArrayList<Player> getLeaderboard() {
+        return DatabaseInit.getLeaderboard();
     }
 
     void setModel(Model m) {

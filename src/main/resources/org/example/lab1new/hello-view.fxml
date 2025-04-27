@@ -30,6 +30,17 @@
         <Circle fx:id="circle1" centerX="677.0" centerY="150.0" fill="red" radius="25.0" stroke="BLACK" strokeType="INSIDE" />
         <Line endY="-134.0" layoutX="379.0" layoutY="134.0" startY="166.00003051757812" />
         <Line endX="-1.0" endY="-111.00000762939453" layoutX="677.0" layoutY="111.0" startX="-1.0" startY="206.80001831054688" />
+      <GridPane fx:id="database" layoutX="760.0" layoutY="-1.0">
+        <columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+      </GridPane>
     </Pane>
     <Pane prefHeight="80.0" prefWidth="604.0">
         <Button layoutY="14.0" mnemonicParsing="false" onAction="#toStartGame" text="Начать игру" />

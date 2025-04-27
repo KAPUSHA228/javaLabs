@@ -1,5 +1,7 @@
 package org.example.lab1new;
 
+import java.util.ArrayList;
+
 public class ActionMsg {
     private final ActionType type;
     private int id;
@@ -7,6 +9,7 @@ public class ActionMsg {
     private double initialY; // Начальная Y-координата пули
     private double speedX;   // Скорость пули по X
     private String name;
+    private ArrayList<Player> winners;
     ActionMsg(ActionType type) {
         this.type = type;
     }
@@ -14,6 +17,10 @@ public class ActionMsg {
     ActionMsg(ActionType type, int idx) {
         this.type = type;
         this.id = idx;
+    }
+    ActionMsg(ActionType type, ArrayList<Player> p) {
+        this.type = type;
+        this.winners = p;
     }
     ActionMsg(ActionType type, String name) {
         this.type = type;
@@ -26,17 +33,20 @@ public class ActionMsg {
         this.speedX = speedX;
     }
     ActionType getType() {
-        return type;
+        return this.type;
     }
 
     int getId() {
-        return id;
+        return this.id;
     }
-    public double getInitialX() { return initialX; }
-    public double getInitialY() { return initialY; }
-    public double getSpeedX() { return speedX; }
+    public double getInitialX() { return this.initialX; }
+    public double getInitialY() { return this.initialY; }
+    public double getSpeedX() { return this.speedX; }
 
     public String getName() {
-        return name;
+        return this.name;
+    }
+    public  ArrayList<Player> getLeaderBoard(){
+        return this.winners;
     }
 }

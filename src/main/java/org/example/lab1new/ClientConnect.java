@@ -1,6 +1,7 @@
 package org.example.lab1new;
 
 import com.google.gson.Gson;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.InputStream;
@@ -41,13 +42,17 @@ public class ClientConnect implements Runnable {
     public ClientConnect(Socket cs, boolean isServer, String name) {
         this(cs, isServer, BModel.build(), null, -1); // Для клиента создаем свою модель
         sendAction(new ActionMsg(ActionType.SETID, name));
-        System.out.println("CNAME "+ name);
-        this.clientIndex=getAction().getId();
+        System.out.println("CNAME " + name);
+        this.clientIndex = getAction().getId();
         System.out.println("CLIENT NEW ID " + this.clientIndex);
     }
 
     int getID() {
-        return clientIndex;
+        return this.clientIndex;
+    }
+
+    public String getPlayerName() {
+        return this.playerName;
     }
 
     @Override
@@ -65,25 +70,31 @@ public class ClientConnect implements Runnable {
                             break;
                         case UPDSC2:
                             System.out.println("Server: Received UPDSC2");
-                            m.getAllInfo().IncreaseScoreI(this.clientIndex, 2);
-                            if (m.getAllInfo().getScoreI(this.clientIndex) >= 6) {
-                                m.getAllInfo().setWinner(this.clientIndex);
-                                m.getAllInfo().setGameStarted(false);
-                                m.getAllInfo().setGameFollow(false);
+                            if (m.getAllInfo().getWinnerId() == -1) {
+                                m.getAllInfo().IncreaseScoreI(this.clientIndex, 2);
+                                if (m.getAllInfo().getScoreI(this.clientIndex) >= 6) {
+                                    m.getAllInfo().setWinner(this.clientIndex);
+                                    m.getAllInfo().setGameStarted(false);
+                                    m.getAllInfo().setGameFollow(false);
+                                    server.incrementWins(getPlayerName());
+                                }
+                                server.setModel(m);
+                                server.broadcast();
                             }
-                            server.setModel(m);
-                            server.broadcast();
                             break;
                         case UPDSC1:
                             System.out.println("Server: Received UPDSC1");
-                            m.getAllInfo().IncreaseScoreI(this.clientIndex, 1);
-                            if (m.getAllInfo().getScoreI(this.clientIndex) >= 6) {
-                                m.getAllInfo().setWinner(this.clientIndex);
-                                m.getAllInfo().setGameStarted(false);
-                                m.getAllInfo().setGameFollow(false);
+                            if (m.getAllInfo().getWinnerId() == -1) {
+                                m.getAllInfo().IncreaseScoreI(this.clientIndex, 1);
+                                if (m.getAllInfo().getScoreI(this.clientIndex) >= 6) {
+                                    m.getAllInfo().setWinner(this.clientIndex);
+                                    m.getAllInfo().setGameStarted(false);
+                                    m.getAllInfo().setGameFollow(false);
+                                    server.incrementWins(getPlayerName());
+                                }
+                                server.setModel(m);
+                                server.broadcast();
                             }
-                            server.setModel(m);
-                            server.broadcast();
                             break;
                         case UPDSH:
                             System.out.println("Server: Received UPDSH");
@@ -120,16 +131,19 @@ public class ClientConnect implements Runnable {
                             }
                             break;
                         case READY:
+                            System.out.println("Server: Received READY");
                             m.getAllInfo().setReady(getID(), true);
                             server.setModel(m);
                             server.broadcast();
                             break;
                         case SETID:
-                            this.playerName=msg.getName();
-                            System.out.println("SNAME " +this.playerName);
+                            System.out.println("Server: Received SETID");
+                            this.playerName = msg.getName();
+                            System.out.println("SNAME " + this.playerName);
                             sendAction(new ActionMsg(ActionType.SETID, this.clientIndex));
                             m.getAllInfo().addName(this.playerName);
                             server.setModel(m);
+                            server.savePlayer(getPlayerName());
                             server.broadcast();
                             break;
                         case SHOT:
@@ -138,14 +152,17 @@ public class ClientConnect implements Runnable {
                             double initialY = msg.getInitialY();
                             double speedX = msg.getSpeedX();
                             Bullet bullet = new Bullet(initialX, initialY, speedX, clientIndex);
-                           // m.getAllInfo().addBullet(bullet);
+                            // m.getAllInfo().addBullet(bullet);
                             server.broadcast(); // Рассылаем обновлённое состояние клиентам
+                            break;
+                        case GETDB:
+                            System.out.println("Server: Received SHOT");
+                            sendAction(new ActionMsg(ActionType.GETDB,  server.getLeaderboard()));
                             break;
                         default:
                             System.out.println("Server: Unknown action");
                     }
-                }
-                else {
+                } else {
                     GameInfo newInfo = getInfo();
                     m.setInfo(newInfo);
                     m.event();
@@ -160,7 +177,7 @@ public class ClientConnect implements Runnable {
     synchronized void sendAction(ActionMsg msg) {
         try {
             String s = json.toJson(msg);
-            System.out.println("HI");
+           // System.out.println("HI");
             dos.writeUTF(s);
             dos.flush();
         } catch (IOException e) {
@@ -180,7 +197,7 @@ public class ClientConnect implements Runnable {
     synchronized void sendInfo(GameInfo msg) {
         try {
             String s = json.toJson(msg);
-            System.out.println("HI2");
+            //System.out.println("HI2");
             dos.writeUTF(s);
             dos.flush();
         } catch (IOException e) {
