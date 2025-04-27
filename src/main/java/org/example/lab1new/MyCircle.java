@@ -11,6 +11,22 @@ public class MyCircle {
         this.r = r;
     }
 
+    public double getCenterX() {
+        return centerX;
+    }
+
+    public double getRadius() {
+        return r;
+    }
+
+    public void setCenterX(double centerX) {
+        this.centerX = centerX;
+    }
+
+    public void setRadius(double r) {
+        this.r = r;
+    }
+
     public void setCenterY(double centerY) {
         this.centerY = centerY;
     }

@@ -2,6 +2,7 @@ package org.example.lab1new;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class GameInfo {
     private final ArrayList<Integer> scores = new ArrayList<>();
@@ -15,7 +16,19 @@ public class GameInfo {
     private byte direction1;
     private byte direction2;
     private int winnerId = -1; // По умолчанию -1 означает, что победителя нет
+    private final List<Bullet> activeBullets = new ArrayList<>();
 
+    public List<Bullet> getActiveBullets() {
+        return activeBullets;
+    }
+
+    public void addBullet(Bullet bullet) {
+        activeBullets.add(bullet);
+    }
+
+    public void removeBullet(Bullet bullet) {
+        activeBullets.remove(bullet);
+    }
     public synchronized void setWinner(int id) {
         winnerId = id;
     }

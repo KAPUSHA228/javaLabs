@@ -3,6 +3,7 @@ package org.example.lab1new;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.sql.*;
 
 public class Server {
     private boolean isRunning1;
@@ -21,9 +22,11 @@ public class Server {
         m.getAllInfo().setDirection2((byte) 1);
         new Thread(() -> moveCircle1(m.getAllInfo().getDirection1())).start();
         new Thread(() -> moveCircle2(m.getAllInfo().getDirection2())).start();
+        //new Thread(this::gameLoop).start();
         try {
             InetAddress ip = InetAddress.getLocalHost();
             ServerSocket ss = new ServerSocket(port, 0, ip);
+            DatabaseInit.initialize();
             System.out.println("Server started\n");
             while (true) {
                 Socket cs = ss.accept();
@@ -51,11 +54,90 @@ public class Server {
             System.out.println("Server error: " + e.getMessage());
         }
     }
+    public synchronized boolean isNameUnique(String name) {
+        try (Connection conn = DatabaseInit.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement("SELECT COUNT(*) FROM players WHERE name = ?")) {
+            pstmt.setString(1, name);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.getInt(1) == 0;
+        } catch (SQLException e) {
+            System.err.println("Ошибка проверки имени: " + e.getMessage());
+            return false;
+        }
+    }
+    public synchronized void savePlayer(String name) {
+        try (Connection conn = DatabaseInit.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement("INSERT INTO players (name) VALUES (?)")) {
+            pstmt.setString(1, name);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Ошибка сохранения игрока: " + e.getMessage());
+        }
+    }
+    public synchronized void incrementWins(String name) {
+        try (Connection conn = DatabaseInit.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement("UPDATE players SET wins = wins + 1 WHERE name = ?")) {
+            pstmt.setString(1, name);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Ошибка обновления побед: " + e.getMessage());
+        }
+    }
 
+    public synchronized List<Player> getLeaderboard() {
+        List<Player> leaders = new ArrayList<>();
+        try (Connection conn = DatabaseInit.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement("SELECT name, wins FROM players ORDER BY wins DESC LIMIT 10");
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                leaders.add(new Player(rs.getString("name"), rs.getInt("wins")));
+            }
+        } catch (SQLException e) {
+            System.err.println("Ошибка получения таблицы лидеров: " + e.getMessage());
+        }
+        return leaders;
+    }
     void setModel(Model m) {
         this.m.setModel(m);
     }
+    private void gameLoop() {
+        while (true) {
+            if (m.getAllInfo().isGameStarted() && !m.getAllInfo().isPaused()) {
+                List<Bullet> bullets = m.getAllInfo().getActiveBullets();
+                Iterator<Bullet> iterator = bullets.iterator();
+                while (iterator.hasNext()) {
+                    Bullet bullet = iterator.next();
+                    bullet.update();
 
+                    // Проверка столкновений с мишенями
+                    if (checkCollision(bullet, m.getAllInfo().getC1())) {
+                        m.getAllInfo().IncreaseScoreI(bullet.getOwnerId(), 2);
+                        iterator.remove();
+                    } else if (checkCollision(bullet, m.getAllInfo().getC2())) {
+                        m.getAllInfo().IncreaseScoreI(bullet.getOwnerId(), 1);
+                        iterator.remove();
+                    }
+                    // Удаление пуль, вышедших за границы
+                    if (bullet.getX() < 0 || bullet.getX() > 800) { // Предполагаемая ширина окна 800
+                        iterator.remove();
+                    }
+                }
+                broadcast(); // Рассылаем обновлённое состояние клиентам
+            }
+            try {
+                Thread.sleep(16); // ~60 FPS
+            } catch (InterruptedException e) {
+                System.out.println("Game loop interrupted");
+            }
+        }
+    }
+
+    private boolean checkCollision(Bullet bullet, MyCircle target) {
+        double dx = bullet.getX() - target.getCenterX();
+        double dy = bullet.getY() - target.getCenterY();
+        double distance = Math.sqrt(dx * dx + dy * dy);
+        return distance <= bullet.getRadius() + target.getRadius();
+    }
 
     public void setFollowing(boolean k) {
         m.getAllInfo().setGameFollow(k);
@@ -78,7 +160,6 @@ public class Server {
     }
 
     public void moveCircle1(byte direction) {
-
         byte speed = 5;
         byte direction1 = direction;
         if (!isRunning1) {

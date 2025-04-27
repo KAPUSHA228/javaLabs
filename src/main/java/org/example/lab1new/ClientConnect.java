@@ -1,8 +1,11 @@
 package org.example.lab1new;
 
 import com.google.gson.Gson;
-
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.IOException;
 import java.net.Socket;
 
 public class ClientConnect implements Runnable {
@@ -15,6 +18,7 @@ public class ClientConnect implements Runnable {
     private final boolean isServer;
     private final Gson json = new Gson();
     private int clientIndex;
+    String playerName;
 
     public ClientConnect(Socket cs, boolean isServer, Model m, Server server, int id) {
         this.cs = cs;
@@ -122,10 +126,20 @@ public class ClientConnect implements Runnable {
                         case SETID:
                             sendAction(new ActionMsg(ActionType.SETID, this.clientIndex));
                             break;
+                        case SHOT:
+                            System.out.println("Server: Received SHOT");
+                            double initialX = msg.getInitialX();
+                            double initialY = msg.getInitialY();
+                            double speedX = msg.getSpeedX();
+                            Bullet bullet = new Bullet(initialX, initialY, speedX, clientIndex);
+                            m.getAllInfo().addBullet(bullet);
+                            server.broadcast(); // Рассылаем обновлённое состояние клиентам
+                            break;
                         default:
                             System.out.println("Server: Unknown action");
                     }
-                } else {
+                }
+                else {
                     GameInfo newInfo = getInfo();
                     m.setInfo(newInfo);
                     m.event();
@@ -148,7 +162,7 @@ public class ClientConnect implements Runnable {
         }
     }
 
-     ActionMsg getAction() {
+    ActionMsg getAction() {
         try {
             String s = dis.readUTF();
             return json.fromJson(s, ActionMsg.class);
@@ -168,7 +182,7 @@ public class ClientConnect implements Runnable {
         }
     }
 
-     GameInfo getInfo() {
+    GameInfo getInfo() {
         try {
             String s = dis.readUTF();
             return json.fromJson(s, GameInfo.class);
