@@ -8,6 +8,7 @@ public class GameInfo {
     private final ArrayList<Integer> scores = new ArrayList<>();
     private final ArrayList<Integer> shots = new ArrayList<>();
     private final ArrayList<Boolean> ready = new ArrayList<>();
+    private final ArrayList<String> names = new ArrayList<>();
     private final MyCircle c1 = new MyCircle(380.0, 150.0, 50.0);
     private final MyCircle c2 = new MyCircle(677.0, 150.0, 25.0);
     private boolean isGameStarted = false;
@@ -24,6 +25,10 @@ public class GameInfo {
 
     public void addBullet(Bullet bullet) {
         activeBullets.add(bullet);
+    }
+
+    public ArrayList<String> getNames() {
+        return names;
     }
 
     public void removeBullet(Bullet bullet) {
@@ -118,6 +123,12 @@ public class GameInfo {
     public void addNewOBS() {
         System.out.println("Adding new OBS entry"); // Логирование
         addClient();
+    }
+    public void addName(String name){
+        names.add(name);
+    }
+    public String getNameI(int index){
+        return this.names.get(index);
     }
 
     public synchronized void IncreaseScoreI(int index, int val) {

@@ -18,7 +18,7 @@ public class ClientConnect implements Runnable {
     private final boolean isServer;
     private final Gson json = new Gson();
     private int clientIndex;
-    String playerName;
+    private String playerName;
 
     public ClientConnect(Socket cs, boolean isServer, Model m, Server server, int id) {
         this.cs = cs;
@@ -38,10 +38,11 @@ public class ClientConnect implements Runnable {
         }
     }
 
-    public ClientConnect(Socket cs, boolean isServer) {
+    public ClientConnect(Socket cs, boolean isServer, String name) {
         this(cs, isServer, BModel.build(), null, -1); // Для клиента создаем свою модель
-        sendAction(new ActionMsg(ActionType.SETID));
-        this.clientIndex = getAction().getId();
+        sendAction(new ActionMsg(ActionType.SETID, name));
+        System.out.println("CNAME "+ name);
+        this.clientIndex=getAction().getId();
         System.out.println("CLIENT NEW ID " + this.clientIndex);
     }
 
@@ -124,7 +125,12 @@ public class ClientConnect implements Runnable {
                             server.broadcast();
                             break;
                         case SETID:
+                            this.playerName=msg.getName();
+                            System.out.println("SNAME " +this.playerName);
                             sendAction(new ActionMsg(ActionType.SETID, this.clientIndex));
+                            m.getAllInfo().addName(this.playerName);
+                            server.setModel(m);
+                            server.broadcast();
                             break;
                         case SHOT:
                             System.out.println("Server: Received SHOT");
@@ -132,7 +138,7 @@ public class ClientConnect implements Runnable {
                             double initialY = msg.getInitialY();
                             double speedX = msg.getSpeedX();
                             Bullet bullet = new Bullet(initialX, initialY, speedX, clientIndex);
-                            m.getAllInfo().addBullet(bullet);
+                           // m.getAllInfo().addBullet(bullet);
                             server.broadcast(); // Рассылаем обновлённое состояние клиентам
                             break;
                         default:

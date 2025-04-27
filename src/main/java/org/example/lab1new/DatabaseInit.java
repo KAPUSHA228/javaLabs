@@ -3,7 +3,7 @@ package org.example.lab1new;
 import java.sql.*;
 
 public class DatabaseInit {
-    private static final String DB_URL = "jdbc:sqlite:D:\\games\\jetBrains\\IntelliJ IDEA Community Edition\\projects\\lab1-new\\game.db";
+    private static final String DB_URL = "jdbc:sqlite:game.db";
 
     // Метод для получения подключения к базе данных
     public static Connection getConnection() throws SQLException {

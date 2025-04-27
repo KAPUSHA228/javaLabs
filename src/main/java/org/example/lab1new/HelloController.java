@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -20,9 +21,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class HelloController implements IObserver {
     private final Model m = BModel.build();
+
     private ClientConnect cc;
     boolean showWinner = false;
     private static final int port = 3124;
+    @FXML
+    public TextField naming;
     @FXML
     private Label id;
     @FXML
@@ -57,20 +61,22 @@ public class HelloController implements IObserver {
             statMenu.getChildren().clear();
             double startX = 10;
             double spacing = 10;
-            for (int i = 0; i < m.getAllInfo().getScores().size(); i++) {
+            for (int i = 0; i < m.getAllInfo().getNames().size(); i++) {
                 VBox vbox = new VBox();
                 String id = String.valueOf(i);
                 String score = String.valueOf(m.getAllInfo().getScoreI(i));
                 String shot = String.valueOf(m.getAllInfo().getShotI(i));
+                String name = String.valueOf(m.getAllInfo().getNameI(i));
                 vbox.setStyle("-fx-border-color: black; -fx-padding: 10;");
                 vbox.setPrefHeight(82.0);
-                vbox.setPrefWidth(120.00);
+                vbox.setPrefWidth(125.00);
                 vbox.setLayoutX(startX + (vbox.getPrefWidth() + spacing) * i);
                 Label l1 = new Label("Номер игрока: " + id);
-                Label l2 = new Label("Счет игрока: " + score);
-                Label l3 = new Label("Выстрелов: " + shot);
-                vbox.getChildren().addAll(l1, l2, l3);
-                statMenu.getChildren().add(vbox); // Добавляем Label в контейнер
+                Label l2 = new Label("Имя игрока: " + name);
+                Label l3 = new Label("Счет игрока: " + score);
+                Label l4 = new Label("Выстрелов: " + shot);
+                vbox.getChildren().addAll(l1, l2, l3, l4);
+                statMenu.getChildren().add(vbox);
             }
             circle1.setCenterY(m.getAllInfo().getC1().getCenterY());
             circle2.setCenterY(m.getAllInfo().getC2().getCenterY());
@@ -95,11 +101,14 @@ public class HelloController implements IObserver {
     @FXML
     public void connect() {
         try {
+            System.out.println(naming.getText());
+            naming.setDisable(true);
+            naming.setVisible(false);
             connecting.setDisable(true);
             connecting.setVisible(false);
             InetAddress ip = InetAddress.getLocalHost();
             Socket cs = new Socket(ip, port);
-            cc = new ClientConnect(cs, false);
+            cc = new ClientConnect(cs, false, naming.getText());
             cc.sendAction(new ActionMsg(ActionType.UPDMODEL));
             m.setInfo(cc.getInfo());
             id.setText(String.valueOf(cc.getID()));

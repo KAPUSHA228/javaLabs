@@ -30,7 +30,7 @@ public class Server {
             System.out.println("Server started\n");
             while (true) {
                 Socket cs = ss.accept();
-                if(list.size()<4) {
+                if (list.size() < 4) {
                     m.addServers(() -> {
                     });
                     int clientIndex = list.size();
@@ -44,8 +44,7 @@ public class Server {
                     new Thread(cc).start();
                     cc.sendAction(new ActionMsg(ActionType.UPDMODEL));
                     cc.sendInfo(m.getAllInfo()); // Отправляем данные сразу после подключения
-                }
-                else{
+                } else {
                     cs.close(); // Отклоняем лишние подключения
                     System.out.println("Server is full. Connection rejected.");
                 }
@@ -54,6 +53,7 @@ public class Server {
             System.out.println("Server error: " + e.getMessage());
         }
     }
+
     public synchronized boolean isNameUnique(String name) {
         try (Connection conn = DatabaseInit.getConnection();
              PreparedStatement pstmt = conn.prepareStatement("SELECT COUNT(*) FROM players WHERE name = ?")) {
@@ -65,6 +65,7 @@ public class Server {
             return false;
         }
     }
+
     public synchronized void savePlayer(String name) {
         try (Connection conn = DatabaseInit.getConnection();
              PreparedStatement pstmt = conn.prepareStatement("INSERT INTO players (name) VALUES (?)")) {
@@ -74,6 +75,7 @@ public class Server {
             System.err.println("Ошибка сохранения игрока: " + e.getMessage());
         }
     }
+
     public synchronized void incrementWins(String name) {
         try (Connection conn = DatabaseInit.getConnection();
              PreparedStatement pstmt = conn.prepareStatement("UPDATE players SET wins = wins + 1 WHERE name = ?")) {
@@ -97,9 +99,11 @@ public class Server {
         }
         return leaders;
     }
+
     void setModel(Model m) {
         this.m.setModel(m);
     }
+
     private void gameLoop() {
         while (true) {
             if (m.getAllInfo().isGameStarted() && !m.getAllInfo().isPaused()) {
@@ -142,6 +146,7 @@ public class Server {
     public void setFollowing(boolean k) {
         m.getAllInfo().setGameFollow(k);
     }
+
     public void setStarting(boolean k) {
         m.getAllInfo().setGameStarted(k);
     }
@@ -230,7 +235,7 @@ public class Server {
         m.getAllInfo().setPaused(false);
         m.getAllInfo().setDirection1((byte) 1);
         m.getAllInfo().setDirection2((byte) 1);
-        for (int i=0;i<m.getAllInfo().getReady().size();i++){
+        for (int i = 0; i < m.getAllInfo().getReady().size(); i++) {
             m.getAllInfo().setReady(i, false);
         }
         broadcast();

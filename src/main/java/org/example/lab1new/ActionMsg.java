@@ -6,7 +6,7 @@ public class ActionMsg {
     private double initialX; // Начальная X-координата пули
     private double initialY; // Начальная Y-координата пули
     private double speedX;   // Скорость пули по X
-
+    private String name;
     ActionMsg(ActionType type) {
         this.type = type;
     }
@@ -14,6 +14,10 @@ public class ActionMsg {
     ActionMsg(ActionType type, int idx) {
         this.type = type;
         this.id = idx;
+    }
+    ActionMsg(ActionType type, String name) {
+        this.type = type;
+        this.name=name;
     }
     ActionMsg(ActionType type, double initialX, double initialY, double speedX) {
         this.type = type;
@@ -31,4 +35,8 @@ public class ActionMsg {
     public double getInitialX() { return initialX; }
     public double getInitialY() { return initialY; }
     public double getSpeedX() { return speedX; }
+
+    public String getName() {
+        return name;
+    }
 }
