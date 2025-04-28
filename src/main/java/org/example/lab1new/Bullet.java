@@ -2,8 +2,8 @@ package org.example.lab1new;
 
 public class Bullet {
     private double x, y;       // Текущая позиция пули
-    private double speedX; // Скорость пули
-    private int ownerId;       // ID игрока, выпустившего пулю
+    private final double speedX; // Скорость пули
+    private final int ownerId;       // ID игрока, выпустившего пулю
     private double radius = 5; // Радиус пули (для проверки столкновений)
 
     public Bullet(double x, double y, double speedX, int ownerId) {
@@ -21,6 +21,6 @@ public class Bullet {
     public double getX() { return x; }
     public double getY() { return y; }
     public int getOwnerId() { return ownerId; }
-    public double getRadius() { return radius; }
+    public double getRadius() { return 5; }
     public double getSpeedX() { return speedX; }
 }

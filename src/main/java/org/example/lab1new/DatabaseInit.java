@@ -39,6 +39,7 @@ public class DatabaseInit {
         } catch (SQLException e) {
             System.err.println("Ошибка получения таблицы лидеров: " + e.getMessage());
         }
+        System.out.println("DB SZ "+leaders.size());
         return leaders;
     }
 
@@ -57,7 +58,7 @@ public class DatabaseInit {
     public static synchronized void savePlayer(String name) {
         try (Connection conn = DatabaseInit.getConnection()){
             if (!isNameUnique(name)) {
-                System.err.println("Такой игрок уже существует");
+                //System.err.println("Такой игрок уже существует");
                 return;
             }
             System.out.println("MYNAME"+ name);

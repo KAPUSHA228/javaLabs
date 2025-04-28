@@ -103,6 +103,11 @@ public class GameInfo {
         this.shots.add(0);
         this.ready.add(false);
     }
+    public synchronized void addChill() {
+        this.scores.add(8);
+        this.shots.add(8);
+        this.ready.add(false);
+    }
 
     public ArrayList<Integer> getShots() {
         return this.shots;

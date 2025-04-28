@@ -42,9 +42,10 @@ public class ClientConnect implements Runnable {
 
     public ClientConnect(Socket cs, boolean isServer, String name) {
         this(cs, isServer, BModel.build(), null, -1); // Для клиента создаем свою модель
-        sendAction(new ActionMsg(ActionType.SETID, name));
+        sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.SETID, name))));
         System.out.println("CNAME " + name);
-        this.clientIndex = getAction().getId();
+        System.out.println("GAMADRILLA1");
+        this.clientIndex = json.fromJson(getMessage().getData(), ActionMsg.class).getId();
         System.out.println("CLIENT NEW ID " + this.clientIndex);
     }
 
@@ -63,154 +64,165 @@ public class ClientConnect implements Runnable {
             dis = new DataInputStream(is);
             while (true) {
                 if (isServer) {
-                    ActionMsg msg = getAction();
+                    System.out.println("GAMADRILLA2");
+                    Message msg = getMessage();
                     switch (msg.getType()) {
-                        case UPDMODEL:
-                            System.out.println("Server: Received UPDMODEL");
-                            sendInfo(m.getAllInfo());
-                            break;
-                        case UPDSC2:
-                            System.out.println("Server: Received UPDSC2");
-                            if (m.getAllInfo().getWinnerId() == -1) {
-                                m.getAllInfo().IncreaseScoreI(this.clientIndex, 2);
-                                if (m.getAllInfo().getScoreI(this.clientIndex) >= 6) {
-                                    m.getAllInfo().setWinner(this.clientIndex);
-                                    m.getAllInfo().setGameStarted(false);
-                                    m.getAllInfo().setGameFollow(false);
-                                    server.incrementWins(getPlayerName());
-                                }
-                                server.setModel(m);
-                                server.broadcast();
+                        case Action:
+                            ActionMsg act = json.fromJson(msg.getData(), ActionMsg.class);
+                            switch (act.getType()) {
+                                case UPDMODEL:
+                                    System.out.println("Server: Received UPDMODEL");
+                                    sendMessage(new Message(MessageType.GameInfo, json.toJson(server.getModel().getAllInfo())));
+                                    break;
+                                case UPDSC2:
+                                    System.out.println("Server: Received UPDSC2");
+                                    if (m.getAllInfo().getWinnerId() == -1) {
+                                        m.getAllInfo().IncreaseScoreI(this.clientIndex, 2);
+                                        if (m.getAllInfo().getScoreI(this.clientIndex) >= 6) {
+                                            m.getAllInfo().setWinner(this.clientIndex);
+                                            m.getAllInfo().setGameStarted(false);
+                                            m.getAllInfo().setGameFollow(false);
+                                            server.incrementWins(getPlayerName());
+                                        }
+                                        server.setModel(m);
+                                        server.broadcast();
+                                    }
+                                    break;
+                                case UPDSC1:
+                                    System.out.println("Server: Received UPDSC1");
+                                    if (m.getAllInfo().getWinnerId() == -1) {
+                                        m.getAllInfo().IncreaseScoreI(this.clientIndex, 1);
+                                        if (m.getAllInfo().getScoreI(this.clientIndex) >= 6) {
+                                            m.getAllInfo().setWinner(this.clientIndex);
+                                            m.getAllInfo().setGameStarted(false);
+                                            m.getAllInfo().setGameFollow(false);
+                                            server.incrementWins(getPlayerName());
+                                        }
+                                        server.setModel(m);
+                                        server.broadcast();
+                                    }
+                                    break;
+                                case UPDSH:
+                                    System.out.println("Server: Received UPDSH");
+                                    m.getAllInfo().IncrementShots(this.clientIndex);
+                                    server.setModel(m);
+                                    server.broadcast();
+                                    break;
+                                case END:
+                                    System.out.println("Server: Received END");
+                                    server.end();
+                                    server.broadcast();
+                                    break;
+                                case STOP:
+                                    System.out.println("Server: Received STOP");
+                                    if (m.getAllInfo().isGameStarted()) {
+                                        server.togglePaused();
+                                    }
+                                    if (!server.getPaused() && server.getFollowing()) {
+                                        new Thread(() -> server.moveCircle1(m.getAllInfo().getDirection1())).start();
+                                        new Thread(() -> server.moveCircle2(m.getAllInfo().getDirection2())).start();
+                                    }
+                                    server.setModel(m);
+                                    server.broadcast();
+                                    break;
+                                case START:
+                                    System.out.println("Server: Received START");
+                                    if (server.checkReady() && !m.getAllInfo().isGameStarted()) {
+                                        server.setStarting(true);
+                                        server.setFollowing(true);
+                                        new Thread(() -> server.moveCircle1((byte) 1)).start();
+                                        new Thread(() -> server.moveCircle2((byte) 1)).start();
+                                        server.setModel(m);
+                                        server.broadcast();
+                                    }
+                                    break;
+                                case READY:
+                                    System.out.println("Server: Received READY");
+                                    m.getAllInfo().setReady(getID(), true);
+                                    server.setModel(m);
+                                    server.broadcast();
+                                    break;
+                                case SETID:
+                                    System.out.println("Server: Received SETID");
+                                    this.playerName = act.getName();
+                                    System.out.println("SNAME " + this.playerName);
+                                    sendMessage(new Message(MessageType.SETID, json.toJson(new ActionMsg(ActionType.SETID, this.clientIndex))));
+                                    m.getAllInfo().addName(this.playerName);
+                                    server.setModel(m);
+                                    server.savePlayer(getPlayerName());
+                                    server.broadcast();
+                                    break;
+                                case SHOT:
+                                    System.out.println("Server: Received SHOT");
+                                    double initialX = act.getInitialX();
+                                    double initialY = act.getInitialY();
+                                    double speedX = act.getSpeedX();
+                                    Bullet bullet = new Bullet(initialX, initialY, speedX, clientIndex);
+                                    // m.getAllInfo().addBullet(bullet);
+                                    server.broadcast(); // Рассылаем обновлённое состояние клиентам
+                                    break;
+                                default:
+                                    System.out.println("Server: Unknown action");
                             }
                             break;
-                        case UPDSC1:
-                            System.out.println("Server: Received UPDSC1");
-                            if (m.getAllInfo().getWinnerId() == -1) {
-                                m.getAllInfo().IncreaseScoreI(this.clientIndex, 1);
-                                if (m.getAllInfo().getScoreI(this.clientIndex) >= 6) {
-                                    m.getAllInfo().setWinner(this.clientIndex);
-                                    m.getAllInfo().setGameStarted(false);
-                                    m.getAllInfo().setGameFollow(false);
-                                    server.incrementWins(getPlayerName());
-                                }
-                                server.setModel(m);
-                                server.broadcast();
-                            }
+                        case GameInfo:
                             break;
-                        case UPDSH:
-                            System.out.println("Server: Received UPDSH");
-                            m.getAllInfo().IncrementShots(this.clientIndex);
-                            server.setModel(m);
-                            server.broadcast();
-                            break;
-                        case END:
-                            System.out.println("Server: Received END");
-                            server.end();
-                            server.broadcast();
-                            break;
-                        case STOP:
-                            System.out.println("Server: Received STOP");
-                            if (m.getAllInfo().isGameStarted()) {
-                                server.togglePaused();
-                            }
-                            if (!server.getPaused() && server.getFollowing()) {
-                                new Thread(() -> server.moveCircle1(m.getAllInfo().getDirection1())).start();
-                                new Thread(() -> server.moveCircle2(m.getAllInfo().getDirection2())).start();
-                            }
-                            server.setModel(m);
-                            server.broadcast();
-                            break;
-                        case START:
-                            System.out.println("Server: Received START");
-                            if (server.checkReady() && !m.getAllInfo().isGameStarted()) {
-                                server.setStarting(true);
-                                server.setFollowing(true);
-                                new Thread(() -> server.moveCircle1((byte) 1)).start();
-                                new Thread(() -> server.moveCircle2((byte) 1)).start();
-                                server.setModel(m);
-                                server.broadcast();
-                            }
-                            break;
-                        case READY:
-                            System.out.println("Server: Received READY");
-                            m.getAllInfo().setReady(getID(), true);
-                            server.setModel(m);
-                            server.broadcast();
-                            break;
-                        case SETID:
-                            System.out.println("Server: Received SETID");
-                            this.playerName = msg.getName();
-                            System.out.println("SNAME " + this.playerName);
-                            sendAction(new ActionMsg(ActionType.SETID, this.clientIndex));
-                            m.getAllInfo().addName(this.playerName);
-                            server.setModel(m);
-                            server.savePlayer(getPlayerName());
-                            server.broadcast();
-                            break;
-                        case SHOT:
-                            System.out.println("Server: Received SHOT");
-                            double initialX = msg.getInitialX();
-                            double initialY = msg.getInitialY();
-                            double speedX = msg.getSpeedX();
-                            Bullet bullet = new Bullet(initialX, initialY, speedX, clientIndex);
-                            // m.getAllInfo().addBullet(bullet);
-                            server.broadcast(); // Рассылаем обновлённое состояние клиентам
-                            break;
-                        case GETDB:
+                        case DBQuery:
                             System.out.println("Server: Received GETDB");
-                            ArrayList<Player>tmp = server.getLeaderboard();
-                            sendAction(new ActionMsg(ActionType.GETDB, tmp));
+                            ArrayList<Player> tmp = server.getLeaderboard();
+                            System.out.println("CC SZ " + tmp.size());
+                            sendMessage(new Message(MessageType.DBQuery, json.toJson(new ActionMsg(ActionType.GETDB, tmp))));
                             break;
                         default:
-                            System.out.println("Server: Unknown action");
+                            System.out.println("Server: Unknown message");
                     }
                 } else {
-                    GameInfo newInfo = getInfo();
-                    m.setInfo(newInfo);
-                    m.event();
+                    System.out.println("GAMADRILLA3");
+                    Message newInfo = getMessage();
+                    switch (newInfo.getType()) {
+                        case SETID:
+                            ActionMsg msg = json.fromJson(newInfo.getData(), ActionMsg.class);
+                            this.clientIndex = msg.getId();
+                            break;
+                        case Action:
+                            System.out.println("PUPA");
+                            //json.fromJson(newInfo.getData(), ActionMsg.class);
+                            break;
+                        case GameInfo:
+                            m.setInfo(json.fromJson(newInfo.getData(), GameInfo.class));
+                            m.event();
+                            break;
+                        case DBQuery:
+                            System.out.println("FULL GOVNA POEL");
+                            break;
+                        default:
+                            System.out.println("Client: Unknown message");
+                    }
+
                 }
             }
         } catch (IOException e) {
-            System.out.println("Run CC error1");
+            System.err.println("Run CC error1");
         }
 
     }
 
-    synchronized void sendAction(ActionMsg msg) {
+    synchronized void sendMessage(Message msg) {
         try {
             String s = json.toJson(msg);
-           // System.out.println("HI");
+            System.out.println("Sending JSON: " + s);
             dos.writeUTF(s);
             dos.flush();
         } catch (IOException e) {
-            System.out.println("sendAction CC error1");
+            System.err.println("sendMessage CC error1");
         }
     }
 
-    ActionMsg getAction() {
+    Message getMessage() {
         try {
             String s = dis.readUTF();
-            return json.fromJson(s, ActionMsg.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    synchronized void sendInfo(GameInfo msg) {
-        try {
-            String s = json.toJson(msg);
-            //System.out.println("HI2");
-            dos.writeUTF(s);
-            dos.flush();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    GameInfo getInfo() {
-        try {
-            String s = dis.readUTF();
-            return json.fromJson(s, GameInfo.class);
+            System.out.println("Received JSON: " + s);
+            return json.fromJson(s, Message.class);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

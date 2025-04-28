@@ -1,5 +1,7 @@
 package org.example.lab1new;
 
+import com.google.gson.Gson;
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -10,6 +12,7 @@ public class Server {
     private boolean isRunning2;
     private static final int port = 3124;
     private final Model m = BModel.build();
+    private final Gson json = new Gson();
     private final ArrayList<ClientConnect> list = new ArrayList<>();
 
     Server() {
@@ -43,9 +46,9 @@ public class Server {
                     synchronized (list) {
                         list.add(cc);
                     }
-                    new Thread(cc).start();
-                    cc.sendAction(new ActionMsg(ActionType.UPDMODEL));
-                    cc.sendInfo(m.getAllInfo()); // Отправляем данные сразу после подключения
+
+                    cc.sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.UPDMODEL))));
+                    cc.sendMessage(new Message (MessageType.GameInfo, json.toJson(m.getAllInfo()))); // Отправляем данные сразу после подключения
                 } else {
                     cs.close(); // Отклоняем лишние подключения
                     System.out.println("Server is full. Connection rejected.");
@@ -71,6 +74,10 @@ public class Server {
 
     void setModel(Model m) {
         this.m.setModel(m);
+    }
+
+    Model getModel() {
+        return m;
     }
 
     private void gameLoop() {
@@ -181,7 +188,7 @@ public class Server {
     }
 
     public void broadcast() {
-        list.forEach(client -> client.sendInfo(m.getAllInfo()));
+        list.forEach(client -> client.sendMessage(new Message(MessageType.GameInfo, json.toJson(m.getAllInfo()))));
     }
 
     public static void main(String[] args) {

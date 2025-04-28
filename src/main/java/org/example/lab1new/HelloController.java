@@ -1,5 +1,6 @@
 package org.example.lab1new;
 
+import com.google.gson.Gson;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -25,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class HelloController implements IObserver {
     private final Model m = BModel.build();
     private ClientConnect cc;
+    private final Gson json = new Gson();
     boolean showWinner = false;
     private static final int port = 3124;
     @FXML
@@ -52,52 +54,49 @@ public class HelloController implements IObserver {
 
     @Override
     public void event() {
+        Platform.runLater(() -> {
+            if ((cc != null) && !m.getAllInfo().getReadyI(cc.getID())) {
+                preparing.setDisable(false);
+                preparing.setVisible(true);
+            }
+            if (m.getAllInfo().isGameStarted() && !m.getAllInfo().isPaused()) {
+                pane.setOnMouseMoved(this::handleMouseMove);
+            } else {
+                pane.setOnMouseMoved(null);
+            }
+            if (m.getAllInfo().getWinnerId() != -1 && !showWinner) {
+                showWinner = true;
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("GAME OVER");
+                alert.setContentText("WINNER IS " + m.getAllInfo().getWinnerId());
+                alert.showAndWait();
+                cc.sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.END))));
+            }
 
-            Platform.runLater(() -> {
-                if (m.getAllInfo().isGameStarted()) {
-                    if ((cc != null) && !m.getAllInfo().getReadyI(cc.getID())) {
-                    preparing.setDisable(false);
-                    preparing.setVisible(true);
-                }
-                if (m.getAllInfo().isGameStarted() && !m.getAllInfo().isPaused()) {
-                    pane.setOnMouseMoved(this::handleMouseMove);
-                } else {
-                    pane.setOnMouseMoved(null);
-                }
-                statMenu.getChildren().clear();
-                double startX = 10;
-                double spacing = 10;
-                for (int i = 0; i < m.getAllInfo().getNames().size(); i++) {
-                    VBox vbox = new VBox();
-                    String id = String.valueOf(i);
-                    String score = String.valueOf(m.getAllInfo().getScoreI(i));
-                    String shot = String.valueOf(m.getAllInfo().getShotI(i));
-                    String name = String.valueOf(m.getAllInfo().getNameI(i));
-                    vbox.setStyle("-fx-border-color: black; -fx-padding: 10;");
-                    vbox.setPrefHeight(82.0);
-                    vbox.setPrefWidth(125.00);
-                    vbox.setLayoutX(startX + (vbox.getPrefWidth() + spacing) * i);
-                    Label l1 = new Label("Номер игрока: " + id);
-                    Label l2 = new Label("Имя игрока: " + name);
-                    Label l3 = new Label("Счет игрока: " + score);
-                    Label l4 = new Label("Выстрелов: " + shot);
-                    vbox.getChildren().addAll(l1, l2, l3, l4);
-                    statMenu.getChildren().add(vbox);
-                }
-                circle1.setCenterY(m.getAllInfo().getC1().getCenterY());
-                circle2.setCenterY(m.getAllInfo().getC2().getCenterY());
-                }
-                if (m.getAllInfo().getWinnerId() != -1 && !showWinner) {
-                    showWinner = true;
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("GAME OVER");
-                    alert.setContentText("WINNER IS " + m.getAllInfo().getWinnerId());
-                    alert.showAndWait();
-                    cc.sendAction(new ActionMsg(ActionType.END));
-                }
+            statMenu.getChildren().clear();
+            double startX = 10;
+            double spacing = 10;
+            for (int i = 0; i < m.getAllInfo().getNames().size(); i++) {
+                VBox vbox = new VBox();
+                String id = String.valueOf(i);
+                String score = String.valueOf(m.getAllInfo().getScoreI(i));
+                String shot = String.valueOf(m.getAllInfo().getShotI(i));
+                String name = String.valueOf(m.getAllInfo().getNameI(i));
+                vbox.setStyle("-fx-border-color: black; -fx-padding: 10;");
+                vbox.setPrefHeight(82.0);
+                vbox.setPrefWidth(125.00);
+                vbox.setLayoutX(startX + (vbox.getPrefWidth() + spacing) * i);
+                Label l1 = new Label("Номер игрока: " + id);
+                Label l2 = new Label("Имя игрока: " + name);
+                Label l3 = new Label("Счет игрока: " + score);
+                Label l4 = new Label("Выстрелов: " + shot);
+                vbox.getChildren().addAll(l1, l2, l3, l4);
+                statMenu.getChildren().add(vbox);
+            }
+            circle1.setCenterY(m.getAllInfo().getC1().getCenterY());
+            circle2.setCenterY(m.getAllInfo().getC2().getCenterY());
 
         });
-
     }
 
     @FXML
@@ -118,16 +117,15 @@ public class HelloController implements IObserver {
             InetAddress ip = InetAddress.getLocalHost();
             Socket cs = new Socket(ip, port);
             cc = new ClientConnect(cs, false, naming.getText());
-            cc.sendAction(new ActionMsg(ActionType.UPDMODEL));
-            m.setInfo(cc.getInfo());
+            cc.sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.UPDMODEL))));
             id.setText(String.valueOf(cc.getID()));
             if (!m.getAllInfo().isGameStarted()) {
                 preparing.setDisable(false);
                 preparing.setVisible(true);
             }
-            //System.out.println("IGET" + m.getAllInfo().getScoreI(0));
+            System.out.println("IGET" + m.getAllInfo().getScoreI(0));
         } catch (IOException e) {
-            System.out.println("Error2");
+            System.err.println("Error2");
         }
 
     }
@@ -135,7 +133,7 @@ public class HelloController implements IObserver {
     @FXML
     protected void toStartGame() {
         showWinner = false;
-        cc.sendAction(new ActionMsg(ActionType.START));
+        cc.sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.START))));
     }
 
     private void handleMouseMove(MouseEvent event) {
@@ -144,7 +142,6 @@ public class HelloController implements IObserver {
 
 
         List<Double> points = shooting.getPoints();
-
         double minX = Double.MAX_VALUE;
         double minY = Double.MAX_VALUE;
         double maxX = Double.MIN_VALUE;
@@ -180,7 +177,7 @@ public class HelloController implements IObserver {
     @FXML
     protected void handlePolygonClick() {
         if (m.getAllInfo().isGameStarted() && !m.getAllInfo().isPaused()) {
-            cc.sendAction(new ActionMsg(ActionType.UPDSH));
+            cc.sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.UPDSH))));
             Circle bullet = new Circle(5);
 
             double initialX = pane.getLayoutX() + shooting.getLayoutX() + 20;
@@ -229,7 +226,7 @@ public class HelloController implements IObserver {
                         parentWindow.getChildren().remove(bullet);
                         System.out.println("bullet remove 2");
                         System.out.println(newX + " " + newY + " " + bulletRadius + " " + goalX1 + " " + goalY1 + " " + r1);
-                        cc.sendAction(new ActionMsg(ActionType.UPDSC2));
+                        cc.sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.UPDSC2))));
                     });
 
                 } else {
@@ -239,7 +236,7 @@ public class HelloController implements IObserver {
                             parentWindow.getChildren().remove(bullet);
                             System.out.println("bullet remove 3");
                             System.out.println(newX + " " + newY + " " + bulletRadius + " " + goalX2 + " " + goalY2 + " " + r2);
-                            cc.sendAction(new ActionMsg(ActionType.UPDSC1));
+                            cc.sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.UPDSC1))));
                         });
                     } else {
                         Platform.runLater(() -> bullet.setCenterX(newX));
@@ -256,12 +253,12 @@ public class HelloController implements IObserver {
 
     @FXML
     protected void togglePause() {
-        cc.sendAction(new ActionMsg(ActionType.STOP));
+        cc.sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.STOP))));
     }
 
     @FXML
     protected void toReady() {
-        cc.sendAction(new ActionMsg(ActionType.READY));
+        cc.sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.READY))));
         preparing.setDisable(true);
         preparing.setVisible(false);
     }
@@ -279,29 +276,31 @@ public class HelloController implements IObserver {
         circle2.setCenterY(150);
         pane.setOnMouseMoved(null);
         m.getAllInfo().ResetStatistic();
-        cc.sendAction(new ActionMsg(ActionType.END));
+        cc.sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.END))));
         System.out.println(m.getAllInfo().getScores());
         System.out.println(m.getAllInfo().getShots());
     }
 
 
-    public void toAccessDB(ActionEvent actionEvent) {
+    public synchronized void toAccessDB(ActionEvent actionEvent) {
         if (cc != null) {
-            new Thread(() -> { // Фоновый поток
-                cc.sendAction(new ActionMsg(ActionType.GETDB));
-                ArrayList<Player> board = cc.getAction().getLeaderBoard();
-                Platform.runLater(() -> { // Обновляем UI в главном потоке
-                    if (board != null && !board.isEmpty()) {
-                        database.getChildren().clear();
-                        System.out.println("SZ " + board.size());
-                        for (int i = 0; i < board.size(); i++) {
-                            database.addRow(i, new Label(board.get(i).getName()), new Label(String.valueOf(board.get(i).getWins())));
-                        }
-                    } else {
-                        System.out.println("Данные не получены или пусты");
+            cc.sendMessage(new Message(MessageType.DBQuery, ""));
+            ActionMsg tmp = json.fromJson(cc.getMessage().getData(), ActionMsg.class);
+            ArrayList<Player> board = tmp.getLeaderBoard();
+            System.out.println("FORM SZ " + board.size());
+
+            Platform.runLater(() -> {
+                if (board != null && !board.isEmpty()) {
+                    database.getChildren().clear();
+                    for (int i = 0; i < board.size(); i++) {
+                        database.add(new Label(board.get(i).getName()), 0, i);
+                        database.add(new Label(String.valueOf(board.get(i).getWins())), 1, i);
                     }
-                });
-            }).start();
+                } else {
+                    System.out.println("Данные не получены или пусты");
+                }
+            });
         }
+
     }
 }
