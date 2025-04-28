@@ -1,6 +1,7 @@
 package org.example.lab1new;
 
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -51,52 +52,52 @@ public class HelloController implements IObserver {
 
     @Override
     public void event() {
-        Platform.runLater(() -> {
-            if ((cc != null) && !m.getAllInfo().getReadyI(cc.getID())) {
-                preparing.setDisable(false);
-                preparing.setVisible(true);
-            }
-            if (m.getAllInfo().isGameStarted() && !m.getAllInfo().isPaused()) {
-                pane.setOnMouseMoved(this::handleMouseMove);
-            } else {
-                pane.setOnMouseMoved(null);
-            }
-            statMenu.getChildren().clear();
-            double startX = 10;
-            double spacing = 10;
-            for (int i = 0; i < m.getAllInfo().getNames().size(); i++) {
-                VBox vbox = new VBox();
-                String id = String.valueOf(i);
-                String score = String.valueOf(m.getAllInfo().getScoreI(i));
-                String shot = String.valueOf(m.getAllInfo().getShotI(i));
-                String name = String.valueOf(m.getAllInfo().getNameI(i));
-                vbox.setStyle("-fx-border-color: black; -fx-padding: 10;");
-                vbox.setPrefHeight(82.0);
-                vbox.setPrefWidth(125.00);
-                vbox.setLayoutX(startX + (vbox.getPrefWidth() + spacing) * i);
-                Label l1 = new Label("Номер игрока: " + id);
-                Label l2 = new Label("Имя игрока: " + name);
-                Label l3 = new Label("Счет игрока: " + score);
-                Label l4 = new Label("Выстрелов: " + shot);
-                vbox.getChildren().addAll(l1, l2, l3, l4);
-                statMenu.getChildren().add(vbox);
-            }
-            circle1.setCenterY(m.getAllInfo().getC1().getCenterY());
-            circle2.setCenterY(m.getAllInfo().getC2().getCenterY());
-//            if (cc != null) {
-//                cc.sendAction(new ActionMsg(ActionType.GETDB));
-//                ArrayList<Player> board = cc.getAction().getLeaderBoard();
-//                database.addRow(0, new Label(board.get(0).getName()), new Label(String.valueOf(board.get(0).getWins())));
-//            }
-            if (m.getAllInfo().getWinnerId() != -1 && !showWinner) {
-                showWinner = true;
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("GAME OVER");
-                alert.setContentText("WINNER IS " + m.getAllInfo().getWinnerId());
-                alert.showAndWait();
-                cc.sendAction(new ActionMsg(ActionType.END));
-            }
+
+            Platform.runLater(() -> {
+                if (m.getAllInfo().isGameStarted()) {
+                    if ((cc != null) && !m.getAllInfo().getReadyI(cc.getID())) {
+                    preparing.setDisable(false);
+                    preparing.setVisible(true);
+                }
+                if (m.getAllInfo().isGameStarted() && !m.getAllInfo().isPaused()) {
+                    pane.setOnMouseMoved(this::handleMouseMove);
+                } else {
+                    pane.setOnMouseMoved(null);
+                }
+                statMenu.getChildren().clear();
+                double startX = 10;
+                double spacing = 10;
+                for (int i = 0; i < m.getAllInfo().getNames().size(); i++) {
+                    VBox vbox = new VBox();
+                    String id = String.valueOf(i);
+                    String score = String.valueOf(m.getAllInfo().getScoreI(i));
+                    String shot = String.valueOf(m.getAllInfo().getShotI(i));
+                    String name = String.valueOf(m.getAllInfo().getNameI(i));
+                    vbox.setStyle("-fx-border-color: black; -fx-padding: 10;");
+                    vbox.setPrefHeight(82.0);
+                    vbox.setPrefWidth(125.00);
+                    vbox.setLayoutX(startX + (vbox.getPrefWidth() + spacing) * i);
+                    Label l1 = new Label("Номер игрока: " + id);
+                    Label l2 = new Label("Имя игрока: " + name);
+                    Label l3 = new Label("Счет игрока: " + score);
+                    Label l4 = new Label("Выстрелов: " + shot);
+                    vbox.getChildren().addAll(l1, l2, l3, l4);
+                    statMenu.getChildren().add(vbox);
+                }
+                circle1.setCenterY(m.getAllInfo().getC1().getCenterY());
+                circle2.setCenterY(m.getAllInfo().getC2().getCenterY());
+                }
+                if (m.getAllInfo().getWinnerId() != -1 && !showWinner) {
+                    showWinner = true;
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("GAME OVER");
+                    alert.setContentText("WINNER IS " + m.getAllInfo().getWinnerId());
+                    alert.showAndWait();
+                    cc.sendAction(new ActionMsg(ActionType.END));
+                }
+
         });
+
     }
 
     @FXML
@@ -281,5 +282,26 @@ public class HelloController implements IObserver {
         cc.sendAction(new ActionMsg(ActionType.END));
         System.out.println(m.getAllInfo().getScores());
         System.out.println(m.getAllInfo().getShots());
+    }
+
+
+    public void toAccessDB(ActionEvent actionEvent) {
+        if (cc != null) {
+            new Thread(() -> { // Фоновый поток
+                cc.sendAction(new ActionMsg(ActionType.GETDB));
+                ArrayList<Player> board = cc.getAction().getLeaderBoard();
+                Platform.runLater(() -> { // Обновляем UI в главном потоке
+                    if (board != null && !board.isEmpty()) {
+                        database.getChildren().clear();
+                        System.out.println("SZ " + board.size());
+                        for (int i = 0; i < board.size(); i++) {
+                            database.addRow(i, new Label(board.get(i).getName()), new Label(String.valueOf(board.get(i).getWins())));
+                        }
+                    } else {
+                        System.out.println("Данные не получены или пусты");
+                    }
+                });
+            }).start();
+        }
     }
 }

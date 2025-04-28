@@ -4,12 +4,12 @@ import java.util.ArrayList;
 
 public class ActionMsg {
     private final ActionType type;
-    private int id;
-    private double initialX; // Начальная X-координата пули
-    private double initialY; // Начальная Y-координата пули
-    private double speedX;   // Скорость пули по X
-    private String name;
-    private ArrayList<Player> winners;
+    private int id =-1;
+    private double initialX=0; // Начальная X-координата пули
+    private double initialY=0; // Начальная Y-координата пули
+    private double speedX=0;   // Скорость пули по X
+    private String name="";
+    private ArrayList<Player> winners= new ArrayList<>();
     ActionMsg(ActionType type) {
         this.type = type;
     }
@@ -21,6 +21,7 @@ public class ActionMsg {
     ActionMsg(ActionType type, ArrayList<Player> p) {
         this.type = type;
         this.winners = p;
+        System.out.println("sz "+winners.size());
     }
     ActionMsg(ActionType type, String name) {
         this.type = type;

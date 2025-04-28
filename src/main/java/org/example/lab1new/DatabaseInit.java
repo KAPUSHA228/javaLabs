@@ -29,9 +29,9 @@ public class DatabaseInit {
 
     public static synchronized ArrayList<Player> getLeaderboard() {
         ArrayList<Player> leaders = new ArrayList<>();
-        try {
-            Connection conn = DatabaseInit.getConnection();
-            PreparedStatement ps = conn.prepareStatement("SELECT name, wins FROM players ORDER BY wins DESC LIMIT 10");
+        try (Connection conn = DatabaseInit.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT name, wins FROM players ORDER BY wins DESC LIMIT 10"))
+        {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 leaders.add(new Player(rs.getString("name"), rs.getInt("wins")));

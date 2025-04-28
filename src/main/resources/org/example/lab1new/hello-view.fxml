@@ -49,6 +49,7 @@
         <Button fx:id="connecting" layoutX="347.0" layoutY="14.0" mnemonicParsing="false" onAction="#connect" text="Подключиться к серверу" />
         <Button fx:id="preparing" layoutX="143.0" layoutY="54.0" mnemonicParsing="false" onAction="#toReady" text="Ready" />
       <TextField fx:id="naming" layoutX="282.0" layoutY="54.0" promptText="Введите имя" />
+      <Button onAction="#toAccessDB" layoutX="541.0" layoutY="15.0" mnemonicParsing="false" text="Вывести таблицу лидеров" />
     </Pane>
 
 </VBox>

@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class ClientConnect implements Runnable {
     private final Model m;
@@ -156,8 +157,9 @@ public class ClientConnect implements Runnable {
                             server.broadcast(); // Рассылаем обновлённое состояние клиентам
                             break;
                         case GETDB:
-                            System.out.println("Server: Received SHOT");
-                            sendAction(new ActionMsg(ActionType.GETDB,  server.getLeaderboard()));
+                            System.out.println("Server: Received GETDB");
+                            ArrayList<Player>tmp = server.getLeaderboard();
+                            sendAction(new ActionMsg(ActionType.GETDB, tmp));
                             break;
                         default:
                             System.out.println("Server: Unknown action");
