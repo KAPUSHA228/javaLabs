@@ -7,7 +7,10 @@ import java.util.List;
 public class GameInfo {
     private final ArrayList<Integer> scores = new ArrayList<>();
     private final ArrayList<Integer> shots = new ArrayList<>();
-    private final ArrayList<Boolean> ready = new ArrayList<>();
+
+
+
+    private ArrayList<Boolean> ready = new ArrayList<>();
     private final ArrayList<String> names = new ArrayList<>();
     private final MyCircle c1 = new MyCircle(380.0, 150.0, 50.0);
     private final MyCircle c2 = new MyCircle(677.0, 150.0, 25.0);
@@ -22,7 +25,6 @@ public class GameInfo {
     public List<Bullet> getActiveBullets() {
         return activeBullets;
     }
-
     public void addBullet(Bullet bullet) {
         activeBullets.add(bullet);
     }

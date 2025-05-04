@@ -55,7 +55,7 @@ public class HelloController implements IObserver {
     @Override
     public void event() {
         Platform.runLater(() -> {
-            if ((cc != null) && !m.getAllInfo().getReadyI(cc.getID())) {
+            if ((cc != null) && !m.getAllInfo().isGameStarted()&&!m.getAllInfo().getReadyI(cc.getID())) {
                 preparing.setDisable(false);
                 preparing.setVisible(true);
             }
@@ -72,7 +72,6 @@ public class HelloController implements IObserver {
                 alert.showAndWait();
                 cc.sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.END))));
             }
-
             statMenu.getChildren().clear();
             double startX = 10;
             double spacing = 10;
@@ -95,7 +94,6 @@ public class HelloController implements IObserver {
             }
             circle1.setCenterY(m.getAllInfo().getC1().getCenterY());
             circle2.setCenterY(m.getAllInfo().getC2().getCenterY());
-
         });
     }
 
@@ -109,19 +107,20 @@ public class HelloController implements IObserver {
     @FXML
     public void connect() {
         try {
-            System.out.println(naming.getText());
-            naming.setDisable(true);
-            naming.setVisible(false);
-            connecting.setDisable(true);
-            connecting.setVisible(false);
             InetAddress ip = InetAddress.getLocalHost();
             Socket cs = new Socket(ip, port);
             cc = new ClientConnect(cs, false, naming.getText());
             cc.sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.UPDMODEL))));
+            naming.setDisable(true);
+            naming.setVisible(false);
+            connecting.setDisable(true);
+            connecting.setVisible(false);
             id.setText(String.valueOf(cc.getID()));
+            System.out.println(cc.getModel().getAllInfo().isGameStarted()+"PUK");
             if (!m.getAllInfo().isGameStarted()) {
                 preparing.setDisable(false);
                 preparing.setVisible(true);
+                System.out.println("ОТРИСОВЫВАЮСЬ");
             }
             System.out.println("IGET" + m.getAllInfo().getScoreI(0));
         } catch (IOException e) {
@@ -282,25 +281,32 @@ public class HelloController implements IObserver {
     }
 
 
-    public synchronized void toAccessDB(ActionEvent actionEvent) {
-        if (cc != null) {
-            cc.sendMessage(new Message(MessageType.DBQuery, ""));
-            ActionMsg tmp = json.fromJson(cc.getMessage().getData(), ActionMsg.class);
-            ArrayList<Player> board = tmp.getLeaderBoard();
-            System.out.println("FORM SZ " + board.size());
+    public void toAccessDB(ActionEvent actionEvent) {
+        new Thread(() -> {
+            if (cc != null) {
+                try {
+                    cc.sendMessage(new Message(MessageType.DBQuery, ""));
+                    ActionMsg tmp = json.fromJson(cc.getMessage().getData(), ActionMsg.class);
+                    ArrayList<Player> board = tmp.getLeaderBoard();
+                    System.out.println("FORM SZ " + board.size());
 
-            Platform.runLater(() -> {
-                if (board != null && !board.isEmpty()) {
-                    database.getChildren().clear();
-                    for (int i = 0; i < board.size(); i++) {
-                        database.add(new Label(board.get(i).getName()), 0, i);
-                        database.add(new Label(String.valueOf(board.get(i).getWins())), 1, i);
-                    }
-                } else {
-                    System.out.println("Данные не получены или пусты");
+                    Platform.runLater(() -> {
+                        if (board != null && !board.isEmpty()) {
+                            database.getChildren().clear();
+                            for (int i = 0; i < board.size(); i++) {
+                                database.add(new Label(board.get(i).getName()), 0, i);
+                                database.add(new Label(String.valueOf(board.get(i).getWins())), 1, i);
+                            }
+                        } else {
+                            System.out.println("Данные не получены или пусты");
+                        }
+                    });
+                } catch (Exception e) {
+                    System.out.println("Ошибка при запросе данных: " + e.getMessage());
                 }
-            });
-        }
-
+            } else {
+                System.out.println("Соединение с сервером не установлено");
+            }
+        }).start();
     }
 }

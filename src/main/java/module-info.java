@@ -7,6 +7,9 @@ open module org.example.lab1new {
     requires java.desktop;
     requires com.google.gson;
     requires java.sql;
+    requires jakarta.persistence;
+    requires org.hibernate.orm.core;
+    requires java.naming;
 
     //opens org.example.lab1new to javafx.fxml;
     exports org.example.lab1new;

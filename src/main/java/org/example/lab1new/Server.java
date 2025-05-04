@@ -29,7 +29,7 @@ public class Server {
         try {
             InetAddress ip = InetAddress.getLocalHost();
             ServerSocket ss = new ServerSocket(port, 0, ip);
-            DatabaseInit.initialize();
+            HibernateUtil.getSessionFactory();
             System.out.println("Server started\n");
             while (true) {
                 Socket cs = ss.accept();
@@ -46,8 +46,7 @@ public class Server {
                     synchronized (list) {
                         list.add(cc);
                     }
-
-                    cc.sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.UPDMODEL))));
+                    if(m.getAllInfo().isGameStarted()){ m.getAllInfo().setReady(clientIndex,true);}
                     cc.sendMessage(new Message (MessageType.GameInfo, json.toJson(m.getAllInfo()))); // Отправляем данные сразу после подключения
                 } else {
                     cs.close(); // Отклоняем лишние подключения
@@ -69,7 +68,7 @@ public class Server {
     }
 
     public synchronized ArrayList<Player> getLeaderboard() {
-        return DatabaseInit.getLeaderboard();
+        return (ArrayList<Player>) DatabaseInit.getLeaderboard();
     }
 
     void setModel(Model m) {
@@ -134,6 +133,9 @@ public class Server {
 
     public boolean getFollowing() {
         return m.getAllInfo().isGameFollow();
+    }
+    public boolean getStarting() {
+        return m.getAllInfo().isGameStarted();
     }
 
     public boolean getPaused() {
