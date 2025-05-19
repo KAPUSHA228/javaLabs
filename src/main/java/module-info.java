@@ -10,6 +10,7 @@ open module org.example.lab1new {
     requires jakarta.persistence;
     requires org.hibernate.orm.core;
     requires java.naming;
+    requires jul.to.slf4j;
 
     //opens org.example.lab1new to javafx.fxml;
     exports org.example.lab1new;

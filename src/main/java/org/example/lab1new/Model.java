@@ -15,6 +15,14 @@ public class Model {
         allServers.forEach(IObserver::event);
     }
 
+    @Override
+    public String toString() {
+        return "Model{" +
+                "allServers=" + allServers +
+                ", info=" + info.toString() +
+                '}';
+    }
+
     public void addServers(IObserver c) {
         allServers.add(c);
         info.addNewOBS();

@@ -1,0 +1,19 @@
+<configuration>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Отключаем логи Hibernate -->
+    <logger name="org.hibernate" level="WARN" />
+    <logger name="org.hibernate.SQL" level="OFF" />
+    <logger name="org.hibernate.type" level="OFF" />
+    <logger name="org.hibernate" level="ERROR"/>
+    <!-- Отключаем логи SQLite -->
+    <logger name="org.sqlite" level="OFF" />
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+</configuration>

@@ -8,7 +8,9 @@
         <property name="hibernate.connection.url">jdbc:sqlite:${user.dir}/game.db</property>
         <property name="hibernate.dialect">org.hibernate.community.dialect.SQLiteDialect</property>
         <property name="hibernate.hbm2ddl.auto">update</property>
-        <property name="show_sql">true</property>
+        <property name="hibernate.show_sql">false</property> <!-- Отключает вывод SQL в консоль -->
+        <property name="hibernate.format_sql">false</property> <!-- Форматирует SQL (если show_sql=true) -->
+        <property name="hibernate.use_sql_comments">false</property> <!-- Добавляет комментарии к SQL -->
         <mapping class="org.example.lab1new.Player"/>
     </session-factory>
 </hibernate-configuration>

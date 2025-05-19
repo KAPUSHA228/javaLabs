@@ -1,11 +1,11 @@
 package org.example.lab1new;
 
 import com.google.gson.Gson;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.sql.*;
 
 public class Server {
     private boolean isRunning1;
@@ -16,6 +16,8 @@ public class Server {
     private final ArrayList<ClientConnect> list = new ArrayList<>();
 
     Server() {
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
         m.getAllInfo().setGameStarted(false);
         m.getAllInfo().setGameFollow(false);
         isRunning1 = false;
@@ -27,30 +29,59 @@ public class Server {
         new Thread(() -> moveCircle2(m.getAllInfo().getDirection2())).start();
         //new Thread(this::gameLoop).start();
         try {
-            InetAddress ip = InetAddress.getLocalHost();
-            ServerSocket ss = new ServerSocket(port, 0, ip);
+            printNetworkInterfaces();
+            ServerSocket ss = new ServerSocket(port, 0, InetAddress.getLocalHost());
             HibernateUtil.getSessionFactory();
-            System.out.println("Server started\n");
+            System.out.println("Server started on " + InetAddress.getLocalHost() + "\n");
+            String msg;
             while (true) {
                 Socket cs = ss.accept();
-                if (list.size() < 4) {
-                    m.addServers(() -> {
-                    });
-                    int clientIndex = list.size();
-                    ClientConnect cc = new ClientConnect(cs, true, m, this, clientIndex);
-                    int port = cs.getPort();
-                    System.out.println("NAME " + cc.getPlayerName());
-
-                    System.out.println("SERVER's MODEL " + m.getAllInfo().getScores());
-                    System.out.println("Connected to: " + port);
-                    synchronized (list) {
-                        list.add(cc);
+                try {
+                    DataInputStream dis = new DataInputStream(cs.getInputStream());
+                    DataOutputStream dos = new DataOutputStream(cs.getOutputStream());
+                    msg = dis.readUTF();
+                    if (msg.equals("OBSERVER")) {
+                        System.out.println("Mobile client connected: " + cs.getInetAddress());
+                        try {
+                            ArrayList<Player> list = getLeaderboard();
+                            dos.writeUTF(json.toJson(list));
+                            dos.flush();
+                        } catch (IOException e) {
+                            System.err.println("Не удалось отправить сообщение: " + e.getMessage());
+                        } finally {
+                            try {
+                                cs.close();
+                            } catch (IOException e) {
+                                System.err.println("Ошибка при закрытии сокета: " + e.getMessage());
+                            }
+                        }
+                    } else {
+                        if (list.size() < 4) {
+                            m.addServers(() -> {
+                            });
+                            int clientIndex;
+                            synchronized (list) {
+                                clientIndex = list.size();
+                                ClientConnect cc = new ClientConnect(cs, true, m, this, clientIndex);
+                                System.out.println("CID " + cc.getID());
+                                System.out.println("SERVER's MODEL " + m.getAllInfo().getScores());
+                                System.out.println("Connected to: " + cs.getPort());
+                                list.add(cc);
+                                if (m.getAllInfo().isGameStarted()) {
+                                    m.getAllInfo().setReady(clientIndex, true);
+                                }
+                            }
+                        } else {
+                            cs.close();
+                            System.out.println("Server is full. Connection rejected.");
+                        }
                     }
-                    if(m.getAllInfo().isGameStarted()){ m.getAllInfo().setReady(clientIndex,true);}
-                    cc.sendMessage(new Message (MessageType.GameInfo, json.toJson(m.getAllInfo()))); // Отправляем данные сразу после подключения
-                } else {
-                    cs.close(); // Отклоняем лишние подключения
-                    System.out.println("Server is full. Connection rejected.");
+                } catch (SocketTimeoutException e) {
+                    System.err.println("Таймаут при чтении данных от клиента");
+                    cs.close();
+                } catch (IOException e) {
+                    System.err.println("Ошибка ввода-вывода: " + e.getMessage());
+                    try { cs.close(); } catch (IOException ignored) {}
                 }
             }
         } catch (IOException e) {
@@ -65,6 +96,35 @@ public class Server {
 
     public synchronized void incrementWins(String name) {
         DatabaseInit.incrementWins(name);
+    }
+
+    private void printNetworkInterfaces() {
+        try {
+            System.out.println("Доступные сетевые интерфейсы:");
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface iface = interfaces.nextElement();
+                if (iface.isLoopback() || !iface.isUp()) continue;
+
+                System.out.println("\nИнтерфейс: " + iface.getDisplayName());
+                Enumeration<InetAddress> addresses = iface.getInetAddresses();
+
+                while (addresses.hasMoreElements()) {
+                    InetAddress addr = addresses.nextElement();
+                    if (addr instanceof Inet4Address) { // Только IPv4
+                        System.out.println("  IP: " + addr.getHostAddress());
+                    }
+                }
+            }
+
+            // Основной IP для подключения
+            InetAddress ip = InetAddress.getLocalHost();
+            System.out.println("\nСервер ожидает подключений на: " +
+                    ip.getHostAddress() + ":" + port);
+        } catch (SocketException | UnknownHostException e) {
+            System.out.println("Ошибка при определении сетевых интерфейсов: " + e.getMessage());
+        }
     }
 
     public synchronized ArrayList<Player> getLeaderboard() {
@@ -134,6 +194,7 @@ public class Server {
     public boolean getFollowing() {
         return m.getAllInfo().isGameFollow();
     }
+
     public boolean getStarting() {
         return m.getAllInfo().isGameStarted();
     }
@@ -190,6 +251,7 @@ public class Server {
     }
 
     public void broadcast() {
+        System.out.println(m.toString());
         list.forEach(client -> client.sendMessage(new Message(MessageType.GameInfo, json.toJson(m.getAllInfo()))));
     }
 
@@ -217,5 +279,6 @@ public class Server {
             m.getAllInfo().setReady(i, false);
         }
         broadcast();
+
     }
 }

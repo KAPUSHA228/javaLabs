@@ -10,11 +10,17 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 
+
 public class ClientConnect implements Runnable {
     private final Model m;
     private final Socket cs;
     private InputStream is;
     private DataInputStream dis;
+
+    public Socket getSocket() {
+        return cs;
+    }
+
     private DataOutputStream dos;
     private final Server server;
     private final boolean isServer;
@@ -34,27 +40,26 @@ public class ClientConnect implements Runnable {
             dos = new DataOutputStream(os);
             is = cs.getInputStream();
             dis = new DataInputStream(is);
-            new Thread(this).start(); // Запускаем поток для обработки сообщений
+            new Thread(this).start();
         } catch (IOException e) {
-            System.out.println("Constructor CC error1");
+            System.err.println("Constructor CC error1" + e.getMessage());
         }
     }
 
     public ClientConnect(Socket cs, boolean isServer, String name) {
-        this(cs, isServer, BModel.build(), null, -1); // Для клиента создаем свою модель
+        this(cs, isServer, BModel.build(), null, -1);
         sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.SETID, name))));
         System.out.println("CNAME " + name);
-        System.out.println("GAMADRILLA1");
-        this.clientIndex = json.fromJson(getMessage().getData(), ActionMsg.class).getId();
-        System.out.println("CLIENT NEW ID " + this.clientIndex);
     }
 
     int getID() {
         return this.clientIndex;
     }
-    boolean getisServer(){
+
+    boolean getisServer() {
         return isServer;
     }
+
     Model getModel() {
         return m;
     }
@@ -70,17 +75,25 @@ public class ClientConnect implements Runnable {
             dis = new DataInputStream(is);
             while (true) {
                 if (isServer) {
-                    System.out.println("GAMADRILLA2");
                     Message msg = getMessage();
-                    switch (msg.getType()) {
+                    switch (msg.type()) {
+//                        case TEST:
+//                            System.out.println("CATCH TEST");
+//                            break;
+                        case DB_QUERY:
+                            System.out.println("Получен запрос лидерборда");
+                            ArrayList<Player> leaderboard = (ArrayList<Player>) DatabaseInit.getLeaderboard();
+                            sendMessage(new Message(MessageType.DB_RESPONSE, json.toJson(leaderboard)));
+                            break;
                         case Action:
-                            ActionMsg act = json.fromJson(msg.getData(), ActionMsg.class);
+                            ActionMsg act = json.fromJson(msg.data(), ActionMsg.class);
                             switch (act.getType()) {
                                 case UPDMODEL:
                                     System.out.println("Server: Received UPDMODEL");
                                     sendMessage(new Message(MessageType.GameInfo, json.toJson(server.getModel().getAllInfo())));
                                     System.out.println(json.toJson(server.getModel().getAllInfo()));
                                     break;
+
                                 case UPDSC2:
                                     System.out.println("Server: Received UPDSC2");
                                     if (m.getAllInfo().getWinnerId() == -1) {
@@ -151,8 +164,9 @@ public class ClientConnect implements Runnable {
                                     System.out.println("Server: Received SETID");
                                     this.playerName = act.getName();
                                     System.out.println("SNAME " + this.playerName);
+                                    System.out.println("SID" + this.clientIndex);
                                     sendMessage(new Message(MessageType.SETID, json.toJson(new ActionMsg(ActionType.SETID, this.clientIndex))));
-                                    m.getAllInfo().addName(this.playerName);
+                                    m.getAllInfo().setName(this.clientIndex, this.playerName);
                                     server.setModel(m);
                                     server.savePlayer(getPlayerName());
                                     server.broadcast();
@@ -182,27 +196,27 @@ public class ClientConnect implements Runnable {
                             System.out.println("Server: Unknown message");
                     }
                 } else {
-                    //System.out.println("GAMADRILLA3");
                     Message newInfo = getMessage();
-                    switch (newInfo.getType()) {
+                    switch (newInfo.type()) {
                         case SETID:
-                            ActionMsg msg = json.fromJson(newInfo.getData(), ActionMsg.class);
+                            System.out.println("GET SETID CASE");
+                            ActionMsg msg = json.fromJson(newInfo.data(), ActionMsg.class);
                             this.clientIndex = msg.getId();
+                            System.out.println("CLIENT NEW ID " + clientIndex);
                             break;
                         case Action:
-                            if (json.fromJson(newInfo.getData(), ActionMsg.class).getType() == ActionType.UPDMODEL) {
+                            if (json.fromJson(newInfo.data(), ActionMsg.class).getType() == ActionType.UPDMODEL) {
                                 System.out.println("WAS UPDMODEL");
                             } else {
                                 System.out.println("WASN'T UPDMODEL");
                             }
                             break;
                         case GameInfo:
-                            m.setInfo(json.fromJson(newInfo.getData(), GameInfo.class));
+                            m.setInfo(json.fromJson(newInfo.data(), GameInfo.class));
                             m.event();
-                            System.out.println(m.getAllInfo().isGameStarted()+"FOO");
+                            System.out.println(m.getAllInfo().isGameStarted() + "FOO");
                             break;
                         case DBQuery:
-                            System.out.println("FULL GOVNA POEL");
                             break;
                         default:
                             System.out.println("Client: Unknown message");
@@ -210,7 +224,7 @@ public class ClientConnect implements Runnable {
                 }
             }
         } catch (IOException e) {
-            System.err.println("Run CC error1");
+            System.err.println("Run CC error1" + e.getMessage());
         }
 
     }
@@ -222,7 +236,7 @@ public class ClientConnect implements Runnable {
             dos.writeUTF(s);
             dos.flush();
         } catch (IOException e) {
-            System.err.println("sendMessage CC error1");
+            System.err.println("sendMessage CC error1" + e.getMessage());
         }
     }
 

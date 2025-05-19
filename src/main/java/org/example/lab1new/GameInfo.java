@@ -7,10 +7,7 @@ import java.util.List;
 public class GameInfo {
     private final ArrayList<Integer> scores = new ArrayList<>();
     private final ArrayList<Integer> shots = new ArrayList<>();
-
-
-
-    private ArrayList<Boolean> ready = new ArrayList<>();
+    private final ArrayList<Boolean> ready = new ArrayList<>();
     private final ArrayList<String> names = new ArrayList<>();
     private final MyCircle c1 = new MyCircle(380.0, 150.0, 50.0);
     private final MyCircle c2 = new MyCircle(677.0, 150.0, 25.0);
@@ -104,11 +101,13 @@ public class GameInfo {
         this.scores.add(0);
         this.shots.add(0);
         this.ready.add(false);
+        this.names.add("");
     }
     public synchronized void addChill() {
         this.scores.add(8);
         this.shots.add(8);
         this.ready.add(false);
+
     }
 
     public ArrayList<Integer> getShots() {
@@ -131,8 +130,8 @@ public class GameInfo {
         System.out.println("Adding new OBS entry"); // Логирование
         addClient();
     }
-    public void addName(String name){
-        names.add(name);
+    public void setName(int index, String name){
+        names.set(index, name);
     }
     public String getNameI(int index){
         return this.names.get(index);
@@ -159,4 +158,22 @@ public class GameInfo {
         this.shots.set(index, tmp);
     }
 
+    @Override
+    public String toString() {
+        return "GameInfo{" +
+                "scores=" + scores +
+                ", shots=" + shots +
+                ", ready=" + ready +
+                ", names=" + names +
+                ", c1=" + c1 +
+                ", c2=" + c2 +
+                ", isGameStarted=" + isGameStarted +
+                ", isGameFollow=" + isGameFollow +
+                ", isPaused=" + isPaused +
+                ", direction1=" + direction1 +
+                ", direction2=" + direction2 +
+                ", winnerId=" + winnerId +
+                ", activeBullets=" + activeBullets +
+                '}';
+    }
 }

@@ -16,6 +16,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -55,10 +56,14 @@ public class HelloController implements IObserver {
     @Override
     public void event() {
         Platform.runLater(() -> {
-            if ((cc != null) && !m.getAllInfo().isGameStarted()&&!m.getAllInfo().getReadyI(cc.getID())) {
+            if ((cc != null) && !m.getAllInfo().isGameStarted() && !m.getAllInfo().getReadyI(cc.getID())) {
                 preparing.setDisable(false);
                 preparing.setVisible(true);
+            } else {
+                preparing.setDisable(true);
+                preparing.setVisible(false);
             }
+
             if (m.getAllInfo().isGameStarted() && !m.getAllInfo().isPaused()) {
                 pane.setOnMouseMoved(this::handleMouseMove);
             } else {
@@ -109,6 +114,17 @@ public class HelloController implements IObserver {
         try {
             InetAddress ip = InetAddress.getLocalHost();
             Socket cs = new Socket(ip, port);
+            //DataInputStream dis = new DataInputStream(cs.getInputStream());
+            DataOutputStream dos = new DataOutputStream(cs.getOutputStream());
+            String msg = "PLAYER";
+            try {
+                String s = json.toJson(msg);
+                // System.out.println("Sending JSON: " + s);
+                dos.writeUTF(s);
+                dos.flush();
+            } catch (IOException e) {
+                System.err.println("sendMessage CC error1" + e.getMessage());
+            }
             cc = new ClientConnect(cs, false, naming.getText());
             cc.sendMessage(new Message(MessageType.Action, json.toJson(new ActionMsg(ActionType.UPDMODEL))));
             naming.setDisable(true);
@@ -116,7 +132,6 @@ public class HelloController implements IObserver {
             connecting.setDisable(true);
             connecting.setVisible(false);
             id.setText(String.valueOf(cc.getID()));
-            System.out.println(cc.getModel().getAllInfo().isGameStarted()+"PUK");
             if (!m.getAllInfo().isGameStarted()) {
                 preparing.setDisable(false);
                 preparing.setVisible(true);
@@ -124,7 +139,7 @@ public class HelloController implements IObserver {
             }
             System.out.println("IGET" + m.getAllInfo().getScoreI(0));
         } catch (IOException e) {
-            System.err.println("Error2");
+            System.err.println("Error2" + e.getMessage());
         }
 
     }
@@ -245,7 +260,7 @@ public class HelloController implements IObserver {
             try {
                 Thread.sleep(16); // ~60 FPS (1000ms / 60 = 16ms)
             } catch (InterruptedException e) {
-                System.out.println("Sleep error1");
+                System.err.println("Sleep error1" + e.getMessage());
             }
         }
     }
@@ -286,7 +301,7 @@ public class HelloController implements IObserver {
             if (cc != null) {
                 try {
                     cc.sendMessage(new Message(MessageType.DBQuery, ""));
-                    ActionMsg tmp = json.fromJson(cc.getMessage().getData(), ActionMsg.class);
+                    ActionMsg tmp = json.fromJson(cc.getMessage().data(), ActionMsg.class);
                     ArrayList<Player> board = tmp.getLeaderBoard();
                     System.out.println("FORM SZ " + board.size());
 
@@ -302,7 +317,7 @@ public class HelloController implements IObserver {
                         }
                     });
                 } catch (Exception e) {
-                    System.out.println("Ошибка при запросе данных: " + e.getMessage());
+                    System.err.println("Ошибка при запросе данных: " + e.getMessage());
                 }
             } else {
                 System.out.println("Соединение с сервером не установлено");
